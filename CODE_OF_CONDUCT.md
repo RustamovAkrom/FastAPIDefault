@@ -67,7 +67,7 @@ Additionally, community organizers are available to help community members engag
 
 If you feel you have been falsely or unfairly accused of violating this Code of Conduct, you should notify Jahongir Hakimjonov with a concise description of your grievance. Your grievance will be handled in accordance with our existing governing policies. [Policy](https://jahongirhakimjonov.github.io/DjangoDefault/)
 
-Django Default
+FastAPI Default
 
 ## 9. Scope
 

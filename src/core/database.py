@@ -24,3 +24,7 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
         engine,
         expire_on_commit=False,
     )
+
+
+# for scripts files
+async_session = get_session_factory()

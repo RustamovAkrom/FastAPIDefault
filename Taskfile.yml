@@ -7,86 +7,157 @@ vars:
   SOURCES_ROOT: src
 
 tasks:
+
   default:
-    cmd:
-      task: all
+    cmds:
+      - task: all
+
+  # =============================
+  # Environment
+  # =============================
 
   init:
-    desc: Initialize local environment
+    desc: Prepare local environment
     env:
       ENV: local
     cmds:
-      - "uv sync"
-      - "docker compose up -d --wait postgres"
-      - "{{.RUNNER}} alembic upgrade head"
-      - "docker compose down"
+      - uv sync
+      - docker compose up -d --wait postgres
+      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+      - docker compose down
 
   run:
-    desc: Run the application locally for development
+    desc: Run application locally
     env:
       ENV: local
     cmds:
-      - "docker compose up -d --wait postgres || true"
-      - "{{.RUNNER}} alembic upgrade head"
-      - "{{.RUNNER}} fastapi dev src/dev.py"
+      - docker compose up -d --wait postgres || true
+      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+      - "{{.RUNNER}} uvicorn src.dev:app --reload"
 
-  upgrade-db:
-    desc: Initialize local database
-    env:
-      ENV: local
+  stop:
+    desc: Stop containers
     cmds:
-      - "docker compose up -d --wait postgres"
-      - "{{.RUNNER}} alembic upgrade head"
-      - "docker compose down"
+      - docker compose down
+
+  # =============================
+  # Database
+  # =============================
+
+  db-up:
+    desc: Apply migrations
+    cmds:
+      - docker compose up -d --wait postgres
+      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+
+  db-down:
+    desc: Downgrade last migration
+    cmds:
+      - "{{.RUNNER}} alembic -c src/alembic.ini downgrade -1"
+
+  db-current:
+    desc: Show current revision
+    cmds:
+      - "{{.RUNNER}} alembic -c src/alembic.ini current"
+
+  db-history:
+    desc: Show migration history
+    cmds:
+      - "{{.RUNNER}} alembic -c src/alembic.ini history"
+
+  db-revision:
+    desc: Create empty migration
+    cmds:
+      - '{{.RUNNER}} alembic -c src/alembic.ini revision -m "{{.CLI_ARGS}}"'
+
+  db-autogen:
+    desc: Autogenerate migration from models
+    cmds:
+      - '{{.RUNNER}} alembic -c src/alembic.ini revision --autogenerate -m "{{.CLI_ARGS}}"'
+
+  db-make:
+    desc: Autogenerate and apply migration
+    cmds:
+      - task: db-autogen
+      - task: db-up
+
+  db-reset:
+    desc: Full database reset
+    cmds:
+      - docker compose down -v
+      - docker compose up -d --wait postgres
+      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+
+  # =============================
+  # Code Quality
+  # =============================
 
   lint:
-    desc: Lint python source files
+    desc: Run ruff linter
     cmds:
       - "{{.RUNNER}} ruff check {{.SOURCES}}"
-      - "{{.RUNNER}} ruff format --check --diff {{.SOURCES}}"
 
   format:
-    desc: Format python source files
+    desc: Format code with ruff
     aliases: ["fmt"]
     cmds:
-      - "{{.RUNNER}} ruff format {{ .SOURCES }}"
+      - "{{.RUNNER}} ruff format {{.SOURCES}}"
       - "{{.RUNNER}} ruff check --fix {{.SOURCES}}"
 
   deptry:
-    desc: Check used dependencies with deptry
-    cmd: "{{.RUNNER}} deptry {{.SOURCES_ROOT}}"
+    desc: Check dependency usage
+    cmds:
+      - "{{.RUNNER}} deptry {{.SOURCES_ROOT}}"
 
   typecheck:
-    desc: Perform type-checking
-    cmd: "{{.RUNNER}} mypy {{.SOURCES_ROOT}}"
+    desc: Run mypy
+    cmds:
+      - "{{.RUNNER}} mypy {{.SOURCES_ROOT}}"
+
+  # =============================
+  # Tests
+  # =============================
 
   test:
+    desc: Run tests
     env:
       ENV: test
-    desc: Run tests
     cmds:
-      - "docker compose up -d --wait postgres-test"
-      - "ENV=test {{.RUNNER}} pytest -vv"
-
-  test-ci:
-    env:
-      ENV: ci
-    desc: Run tests
-    cmd: "{{.RUNNER}} pytest"
+      - docker compose up -d --wait postgres-test
+      - ENV=test {{.RUNNER}} pytest -vv
 
   testcov:
-    desc: Run tests and generate a coverage report
+    desc: Run tests with coverage
+    env:
+      ENV: test
     cmds:
-      - task: test
+      - docker compose up -d --wait postgres-test
+      - "{{.RUNNER}} coverage run -m pytest -vv"
       - "{{.RUNNER}} coverage report -m"
       - "{{.RUNNER}} coverage xml"
 
+  test-ci:
+    desc: Run tests in CI mode
+    env:
+      ENV: ci
+    cmds:
+      - "{{.RUNNER}} pytest"
+
+  # =============================
+  # Git Hooks
+  # =============================
+
   pre-commit:
-    desc: Run pre-commit
-    cmd: uvx pre-commit run
+    desc: Run pre-commit hooks
+    cmds:
+      - uvx pre-commit run
+
+  # =============================
+  # Full CI
+  # =============================
 
   all:
-    desc: Run the standard set of checks performed in CI
+    desc: Run full CI pipeline
     cmds:
       - task: format
       - task: deptry

@@ -1,4 +1,4 @@
-# Contributing to Django Default
+# Contributing to FastAPI-Default
 
 Thank you for your interest in contributing to Django Default! We welcome contributions from everyone, and we are grateful for every contribution made to the project. This document provides guidelines for contributing to Django Default.
 

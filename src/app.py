@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 
 from api.router import api_router
+from core.admin import init_admin
 from core.exceptions import register_exception_handlers
 from core.lifespan import lifespan
 from core.logger import configure_logger
@@ -47,4 +48,6 @@ def create_app() -> FastAPI:
 
     register_exception_handlers(app)
 
+    # initialize optional admin panel
+    init_admin(app)
     return app

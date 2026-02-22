@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     app_name: str = "fastapidefault"
     env: Literal["local", "test", "ci", "dev", "prod"] = "prod"
     root_path: str = ""
+    secret_key: str = "change-this-secret-key-in.env-file"  # noqa:S105
 
     debug: bool = True
 
@@ -58,6 +59,12 @@ class Settings(BaseSettings):
     postgres_password: str = ""
     postgres_db: str = ""
     postgres_echo: bool = False
+
+    # Admin panel settings
+    admin_enabled: bool = False
+    admin_user: str | None = None
+    admin_password: str | None = None
+    admin_path: str = "/admin"
 
     sentry_dsn: str | None = None
 
@@ -75,6 +82,10 @@ class Settings(BaseSettings):
                 path=f"/{self.postgres_db}",
             )
         )
+
+    @property
+    def postgres_sync_url(self) -> str:
+        return self.postgres_url.replace("+asyncpg", "")
 
 
 @cache
