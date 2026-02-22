@@ -32,6 +32,7 @@ tasks:
       ENV: local
     cmds:
       - docker compose up -d --wait postgres || true
+      # - task: obs-up
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
       - "{{.RUNNER}} uvicorn src.dev:app --reload"
 
@@ -88,6 +89,14 @@ tasks:
       - docker compose up -d --wait postgres
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
 
+  # =============================
+  # Admin 
+  # =============================
+  create_admin:
+    desc: Create super admin
+    cmds:
+      - docker compose up -d --wait postgres
+      - "{{.RUNNER}} python -m scripts.create_admin"
   # =============================
   # Code Quality
   # =============================
@@ -155,6 +164,24 @@ tasks:
   # =============================
   # Full CI
   # =============================
+
+  # Monitoring with Prometheus
+  # obs-up:
+  #   desc: Start Prometheus + Grafana
+  #   cmds:
+  #     - docker compose up -d prometheus grafana
+
+  # obs-down:
+  #   desc: Stop observability stack
+  #   cmds:
+  #     - docker compose stop prometheus grafana
+
+  # stack:
+  #   desc: Run FULL infrastructure
+  #   cmds:
+  #     - docker compose up -d --wait postgres
+  #     - task: obs-up
+  #     - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
 
   all:
     desc: Run full CI pipeline

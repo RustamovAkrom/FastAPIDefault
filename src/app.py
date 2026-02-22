@@ -26,7 +26,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_title,
         root_path=settings.root_path,
-        redoc_url=None,
+        redoc_url="/redoc",
         default_response_class=ORJSONResponse,
         swagger_ui_parameters={"defaultModelsExpandDepth": -1},
         lifespan=lifespan,
