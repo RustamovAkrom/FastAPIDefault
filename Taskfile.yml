@@ -170,7 +170,7 @@ tasks:
 
   typecheck:
     cmds:
-      - "{{.RUNNER}} mypy {{.SOURCES_ROOT}}"
+      - "{{.RUNNER}} mypy src tests"
 
   test:
     env:
