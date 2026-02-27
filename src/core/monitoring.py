@@ -2,14 +2,20 @@ import time
 from importlib.metadata import version
 from typing import Annotated
 
-from fastapi import APIRouter, Header, Response
-from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, generate_latest
+from fastapi import APIRouter, Header, Response, Depends, HTTPException
 from pydantic import BaseModel
 
 from core.settings import get_settings
+from core.prometheus import REGISTRY  # IMPORTANT: use same registry!
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
-router = APIRouter()
 
+router = APIRouter(tags=["Monitoring"])
+
+
+# =========================================================
+# RESPONSE MODELS
+# =========================================================
 
 class HealthcheckResponse(BaseModel):
     timestamp: int
@@ -23,26 +29,46 @@ class VersionResponse(BaseModel):
     version: str
 
 
-@router.get("/healthcheck", summary="Проверить доступность сервиса")
-def ping() -> HealthcheckResponse:
+# =========================================================
+# BASIC MONITORING
+# =========================================================
+
+@router.get("/healthcheck", summary="Service healthcheck")
+def healthcheck() -> HealthcheckResponse:
     return HealthcheckResponse(timestamp=int(time.time()))
 
 
-@router.get("/status", summary="Проверить статус используемых сервисов")
+@router.get("/status", summary="Services status")
 async def status() -> StatusResponse:
     return StatusResponse()
 
 
-@router.get("/version", summary="Проверить версию приложения")
+@router.get("/version", summary="Application version")
 async def get_version() -> VersionResponse:
     settings = get_settings()
     return VersionResponse(version=version(settings.app_name))
 
 
-@router.get("/metrics", summary="Получить метрики Prometheus")
-async def metrics(key: Annotated[str, Header()] = "") -> Response:
+# =========================================================
+# PROMETHEUS METRICS
+# =========================================================
+
+def _verify_metrics_key(key: str = Header(default="")):
+    """
+    Optional security for metrics endpoint.
+    Works ONLY if key configured.
+    """
     settings = get_settings()
+
+    # if key not set → public endpoint (for Prometheus scraping)
+    if not settings.prometheus_metrics_key:
+        return
+
     if key != settings.prometheus_metrics_key:
-        return Response(status_code=403)
+        raise HTTPException(status_code=403, detail="Forbidden metrics access")
+
+
+@router.get("/metrics", summary="Prometheus metrics")
+async def metrics(_: Annotated[None, Depends(_verify_metrics_key)]) -> Response:
     data = generate_latest(REGISTRY)
     return Response(data, media_type=CONTENT_TYPE_LATEST)

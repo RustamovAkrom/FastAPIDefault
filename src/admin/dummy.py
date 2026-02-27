@@ -1,8 +1,6 @@
-from sqladmin import ModelView
-
-from admin.registry import register_admin
+from core.admin import register_admin, BaseAdmin
 from db.models.dummy import Dummy
-from .base import BaseAdmin
+
 
 @register_admin
 class DummyAdmin(BaseAdmin, model=Dummy):

@@ -2,17 +2,19 @@ import asyncio
 
 from sqlalchemy import select
 
-from src.core.database import async_session
-from src.core.security import hash_password
-from src.db.models.user import User, UserRole
-
+from core.database import async_session
+from core.security import hash_password
+from db.models.user import User, UserRole
+from core.settings import get_settings
 
 async def create_admin():
+    settings = get_settings()
+
     async with async_session() as session:
 
-        username = input("Username: ")
+        username = input(f"Username [{settings.admin_user}]: ")
         email = input("Email: ")
-        password = input("Password: ")
+        password = input(f"Password: [{settings.admin_password}]:")
 
         result = await session.execute(
             select(User).where(User.username == username)

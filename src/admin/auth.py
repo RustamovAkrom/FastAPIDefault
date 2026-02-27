@@ -67,4 +67,3 @@ class AdminAuth(AuthenticationBackend):
                 return False
 
         return True
-

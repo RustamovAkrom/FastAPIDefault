@@ -1,31 +1,68 @@
 [project]
-name = "fastapidefault"
-version = "0.1.0"
-description = "FastAPI Template Project"
-authors = [{ name = "Jahongir Hakimjonov", email = "jahongirhakimjonov@gmail.com" }]
+name = "fastapi-default"
+version = "1.0.0"
+description = "Production-ready FastAPI template with async SQLAlchemy, Prometheus monitoring, Sentry tracking, and Docker support"
+authors = [
+    { name = "Your Name", email = "your.email@example.com" }
+]
 readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.11"
+keywords = [
+    "fastapi",
+    "template",
+    "production",
+    "async",
+    "sqlalchemy",
+    "postgresql",
+    "prometheus",
+    "sentry",
+    "docker"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Framework :: FastAPI",
+]
+
 dependencies = [
-    "alembic==1.15.2",
-    "fastapi[all]==0.115.12",
-    "httpx==0.28.1",
-    "loguru==0.7.3",
-    "prometheus-client==0.22.0",
-    "pydantic-settings==2.9.1",
-    "pydantic==2.11.4",
-    "sentry_sdk[fastapi]==2.29.1",
-    "sqlalchemy[asyncio]==2.0.41",
-    "uvicorn==0.34.2",
-    "yarl==1.20.0",
+    "alembic>=1.15.2",
+    "fastapi[all]>=0.115.12",
+    "httpx>=0.28.1",
+    "loguru>=0.7.3",
+    "prometheus-client>=0.22.0",
+    "pydantic-settings>=2.9.1",
+    "pydantic>=2.11.4",
+    "sentry_sdk[fastapi]>=2.29.1",
+    "sqlalchemy[asyncio]>=2.0.41",
+    "uvicorn>=0.34.2",
+    "yarl>=1.20.0",
     "starlette>=0.46.2",
     "orjson>=3.11.7",
     "asyncpg>=0.30.0",
     "sqladmin>=0.23.0",
     "psycopg2-binary>=2.9.11",
-    "passlib[bcrypt]==1.7.4",
-    "bcrypt==4.0.1",
+    "passlib[bcrypt]>=1.7.4",
+    "bcrypt>=4.0.1",
     "itsdangerous>=2.2.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/fastapi-default"
+Documentation = "https://github.com/yourusername/fastapi-default#readme"
+Repository = "https://github.com/yourusername/fastapi-default.git"
+Issues = "https://github.com/yourusername/fastapi-default/issues"
 
 [dependency-groups]
 dev = ["fastapi[standard]", "deptry"]

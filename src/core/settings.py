@@ -8,8 +8,10 @@ from yarl import URL
 ENV_FILE_PATH = (
     {
         "local": ".env",
-        "ci": ".env.ci",
+        "dev": ".env.dev",
         "test": ".env.test",
+        "ci": ".env.ci",
+        "prod": ".env",
     }
 ).get(os.getenv("ENV", "local"), ".env")
 
@@ -44,15 +46,22 @@ class Settings(BaseSettings):
             env_settings,
             file_secret_settings,
         )
-
+    # APP CORE
     app_title: str = "FastAPI Template Project"
     app_name: str = "fastapidefault"
-    env: Literal["local", "test", "ci", "dev", "prod"] = "prod"
-    root_path: str = ""
-    secret_key: str = "change-this-secret-key-in.env-file"  # noqa:S105
+    app_version: str = "1.0.0"
+
+    env: Literal["local", "test", "ci", "dev", "prod"] = "local"
 
     debug: bool = True
+    root_path: str = ""
 
+    secret_key: str = "change-this-secret-key-in.env-file"  # noqa:S105
+
+    # service name for logs/traces
+    service_name: str = "fastapi-backend"
+
+    # Postgres
     postgres_host: str = "localhost"
     postgres_port: int = 5432
     postgres_user: str = "postgres"
@@ -60,16 +69,50 @@ class Settings(BaseSettings):
     postgres_db: str = ""
     postgres_echo: bool = False
 
+    # connection pool
+    db_pool_size: int = 10
+    db_max_overflow: int = 20
+
     # Admin panel settings
     admin_enabled: bool = False
     admin_user: str | None = None
     admin_password: str | None = None
     admin_path: str = "/admin"
 
+    # Observability
+    prometheus_enabled: bool = True
+    prometheus_metrics_key: str | None = None
+
+    # Loki
+    loki_enabled: bool = True
+    loki_url: str = "http://loki:3100"
+
+    # Grafana
+    grafana_url: str = "http://grafana:3000"
+
+    # Sentry
     sentry_dsn: str | None = None
+    sentry_traces_sample_rate: float = 1.0
 
-    prometheus_metrics_key: str = "secret"
+    # Logging
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    log_json: bool = False
+    log_to_file: bool = False
+    log_file_path: str = "logs/app.log"
 
+    # Security
+    allowed_hosts: list[str] = ["*"]
+
+    # Build helpers
+    @property
+    def is_prod(self) -> bool:
+        return self.env == "prod"
+    
+    @property
+    def is_dev(self) -> bool:
+        return self.env in ("local", "dev")
+    
+    # Database urls
     @property
     def postgres_url(self) -> str:
         return str(
@@ -88,6 +131,7 @@ class Settings(BaseSettings):
         return self.postgres_url.replace("+asyncpg", "")
 
 
+# Settings singleton
 @cache
 def get_settings() -> Settings:
     return Settings()

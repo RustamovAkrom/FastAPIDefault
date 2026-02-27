@@ -11,7 +11,8 @@ def get_db_engine() -> AsyncEngine:
     return create_async_engine(
         settings.postgres_url,
         echo=settings.postgres_echo,
-        pool_size=20,
+        pool_size=settings.db_pool_size,
+        max_overflow=settings.db_max_overflow,
         pool_pre_ping=True,
         pool_use_lifo=True,
     )

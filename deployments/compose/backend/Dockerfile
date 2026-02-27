@@ -25,6 +25,11 @@ FROM python:${PYTHON_VERSION} AS app
 
 WORKDIR /app
 
+# Install PostgreSQL client tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV PYTHONBUFFERED=1 \
     PYTHONPATH=$PYTHONPATH:/app \
     VIRTUAL_ENV=/opt/venv \
@@ -53,8 +58,12 @@ RUN sed -i 's/\r$//g' /start && chmod +x /start
 # Копируем готовое окружение
 COPY --from=builder /opt/venv /opt/venv
 COPY ./pyproject.toml ./uv.lock ./
-COPY src/. /app/
+COPY src /app
 
-RUN chgrp -R 0 /app && chmod -R g=u /app
+# Create non-root user for security
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+USER appuser
 
 ENTRYPOINT ["/entrypoint"]

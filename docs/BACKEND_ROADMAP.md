@@ -1,92 +1,79 @@
-# 🗺 Backend Roadmap — Enterprise Level
+# 🗺 Backend Roadmap — дорожная карта развития
 
-This roadmap defines long-term backend evolution.
+Короткая дорожная карта с приоритетами и практическими шагами.
 
 ---
 
-# Phase 1 — Foundation (DONE)
+## Этап 1 — Foundation (DONE)
 
 - FastAPI core
 - Async SQLAlchemy
 - Alembic
-- Docker
-- Taskfile
-- Admin panel
-- RBAC
+- Docker + docker-compose
+- Taskfile (локальные задачи)
+- Admin panel + RBAC
 
 ---
 
-# Phase 2 — Observability (DONE)
+## Этап 2 — Observability (DONE)
 
-- Prometheus
-- Grafana
-- Sentry
-- Metrics middleware
-
----
-
-# Phase 3 — Performance Optimization
-
-Planned:
-
-- Redis caching
-- DB query metrics
-- connection pooling (pgbouncer)
-- endpoint normalization
+- Prometheus (метрики)
+- Grafana (дашборды)
+- Sentry (ошибки)
+- Middleware для метрик
 
 ---
 
-# Phase 4 — Background Processing
+## Этап 3 — Performance Optimization (план)
 
-- Celery
-- RabbitMQ
-- Retry policies
-- Monitoring jobs
-
----
-
-# Phase 5 — Advanced Observability
-
-- OpenTelemetry
-- Distributed tracing
-- Log aggregation
-- Structured logging
+- Redis caching (сценарии и TTL для ключей)
+- DB query metrics и оптимизация горячих запросов
+- Настройка pgbouncer для connection pooling
+- Нормализация endpoint-ов и кеширование
 
 ---
 
-# Phase 6 — Security
+## Этап 4 — Background Processing
 
-- Rate limiting
-- Audit logs
-- JWT rotation
-- API throttling
-
----
-
-# Phase 7 — Scalability
-
-- Horizontal scaling
-- Load balancer
-- Kubernetes
-- Helm charts
+- Celery + брокер (RabbitMQ/Redis)
+- Политики retry и dead-letter
+- Метрики выполнения задач и мониторинг (Flower / Prometheus)
 
 ---
 
-# Phase 8 — Enterprise
+## Этап 5 — Advanced Observability
 
-- Multi-tenant architecture
-- Feature flags
-- Blue/green deploy
-- Canary releases
-- SLA monitoring
+- OpenTelemetry для распределённой трассировки
+- Интеграция трассировок с Grafana/Jaeger
+- Централизованное логирование (например, Loki/Elasticsearch)
 
 ---
 
-# Long-Term Goal
+## Этап 6 — Security
 
-Transform project into:
+- Rate limiting (API gateway / middleware)
+- Audit logs для критичных операций
+- JWT rotation и token revocation lists
+- Политики rotating secrets
 
-- SaaS-ready backend
-- Production-grade infra
-- Observable-first architecture
-- Cloud-native deployment
+---
+
+## Этап 7 — Scalability
+
+- Горизонтальное масштабирование сервисов
+- Load balancer + healthchecks
+- Kubernetes + Helm charts (deployment manifests)
+
+---
+
+## Этап 8 — Enterprise
+
+- Multi-tenant architecture (по необходимости)
+- Feature flags и постепенные релизы
+- Blue/green / Canary deploy
+- SLA мониторинг и runbooks
+
+---
+
+Если хотите — разложу конкретный план на 3 месяца с задачами и приоритетами
+для команды (issues и примеры конфигураций для Redis/pgbouncer/Celery).

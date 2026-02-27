@@ -17,8 +17,9 @@ def create_app() -> FastAPI:
     """
     Create FastAPI application instance with middleware, routers, and exception handlers.
     """
-    settings = get_settings()
     configure_logger()
+    
+    settings = get_settings()
 
     if settings.sentry_dsn:
         init_sentry()

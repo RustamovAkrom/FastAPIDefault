@@ -5,8 +5,26 @@ set -o pipefail
 set -o nounset
 set -x
 
-# Apply migrations
-alembic upgrade head
+echo "Applying database migrations..."
 
-# Run Uvicorn server using ASGI
-uvicorn app:create_app --proxy-headers --workers=2 --loop uvloop --http httptools --host 0.0.0.0 --port 8000 --reload
+alembic -c src/alembic.ini upgrade head
+
+echo "Starting FastAPI server..."
+
+# Get environment and determine workers
+ENV=${ENV:-dev}
+WORKERS=${WORKERS:-2}
+
+# Use 4 workers in production for better concurrency
+if [ "$ENV" = "prod" ]; then
+  WORKERS=${WORKERS:-4}
+fi
+
+exec uvicorn app:create_app \
+  --factory \
+  --proxy-headers \
+  --workers $WORKERS \
+  --loop uvloop \
+  --http httptools \
+  --host 0.0.0.0 \
+  --port 8000

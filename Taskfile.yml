@@ -6,18 +6,27 @@ vars:
   SOURCES: src tests
   SOURCES_ROOT: src
 
+# =========================================================
+# DEFAULT
+# =========================================================
+
 tasks:
 
   default:
     cmds:
-      - task: all
+      - task: help
 
-  # =============================
-  # Environment
-  # =============================
+  help:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+# =========================================================
+# ENVIRONMENT
+# =========================================================
 
   init:
-    desc: Prepare local environment
+    desc: First project setup (deps + db + migrations)
     env:
       ENV: local
     cmds:
@@ -27,23 +36,45 @@ tasks:
       - docker compose down
 
   run:
-    desc: Run application locally
+    desc: Run the application locally for development
     env:
       ENV: local
     cmds:
-      - docker compose up -d --wait postgres || true
-      # - task: obs-up
+      - "docker compose up -d --wait postgres || true"
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
-      - "{{.RUNNER}} uvicorn src.dev:app --reload"
+      - "{{.RUNNER}} fastapi dev src/dev.py"
+      
+  dev:
+    desc: Run backend locally (with docker postgres)
+    env:
+      ENV: local
+    cmds:
+      - docker compose up -d --wait postgres
+      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+      - "{{.RUNNER}} uvicorn dev:app --reload"
 
-  stop:
-    desc: Stop containers
+  prod:
+    desc: Run full production stack
+    env:
+      ENV: prod
+    cmds:
+      - docker compose up -d --build
+      - docker compose up
+
+  down:
+    desc: Stop ALL containers
     cmds:
       - docker compose down
 
-  # =============================
-  # Database
-  # =============================
+  restart:
+    desc: Restart infrastructure
+    cmds:
+      - docker compose down
+      - docker compose up -d --build
+
+# =========================================================
+# DATABASE
+# =========================================================
 
   db-up:
     desc: Apply migrations
@@ -51,84 +82,97 @@ tasks:
       - docker compose up -d --wait postgres
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
 
-  db-down:
-    desc: Downgrade last migration
-    cmds:
-      - "{{.RUNNER}} alembic -c src/alembic.ini downgrade -1"
-
-  db-current:
-    desc: Show current revision
-    cmds:
-      - "{{.RUNNER}} alembic -c src/alembic.ini current"
-
-  db-history:
-    desc: Show migration history
-    cmds:
-      - "{{.RUNNER}} alembic -c src/alembic.ini history"
-
-  db-revision:
-    desc: Create empty migration
-    cmds:
-      - '{{.RUNNER}} alembic -c src/alembic.ini revision -m "{{.CLI_ARGS}}"'
-
-  db-autogen:
-    desc: Autogenerate migration from models
-    cmds:
-      - '{{.RUNNER}} alembic -c src/alembic.ini revision --autogenerate -m "{{.CLI_ARGS}}"'
-
-  db-make:
-    desc: Autogenerate and apply migration
-    cmds:
-      - task: db-autogen
-      - task: db-up
-
   db-reset:
-    desc: Full database reset
+    desc: Full reset DB (DROP ALL DATA)
     cmds:
       - docker compose down -v
       - docker compose up -d --wait postgres
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
 
-  # =============================
-  # Admin 
-  # =============================
+  db-shell:
+    desc: Connect to postgres shell
+    cmds:
+      - docker compose exec postgres psql -U ${POSTGRES_USER} ${POSTGRES_DB}
+
+# =========================================================
+# ADMIN
+# =========================================================
+
   create_admin:
     desc: Create super admin
     cmds:
       - docker compose up -d --wait postgres
       - "{{.RUNNER}} python -m scripts.create_admin"
-  # =============================
-  # Code Quality
-  # =============================
+
+# =========================================================
+# MONITORING / OBSERVABILITY
+# =========================================================
+
+  obs:
+    desc: Start Prometheus + Grafana + Loki + Promtail
+    cmds:
+      - docker compose up -d prometheus grafana loki promtail
+
+  obs-down:
+    desc: Stop observability stack
+    cmds:
+      - docker compose stop prometheus grafana loki promtail
+
+  logs:
+    desc: Show logs for all services
+    cmds:
+      - docker compose logs -f
+
+  logs-web:
+    desc: Show backend logs
+    cmds:
+      - docker compose logs -f web
+
+  logs-db:
+    desc: Show postgres logs
+    cmds:
+      - docker compose logs -f postgres
+
+# =========================================================
+# FULL STACK
+# =========================================================
+
+  stack:
+    desc: Run FULL infra DB + Monitoring + Migrations
+    cmds:
+      - docker compose up -d --wait postgres
+      - task: obs
+      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+
+  stack-reset:
+    desc: Full infra reset
+    cmds:
+      - docker compose down -v
+      - task: stack
+
+# =========================================================
+# CI / QUALITY
+# =========================================================
 
   lint:
-    desc: Run ruff linter
     cmds:
       - "{{.RUNNER}} ruff check {{.SOURCES}}"
 
   format:
-    desc: Format code with ruff
     aliases: ["fmt"]
     cmds:
       - "{{.RUNNER}} ruff format {{.SOURCES}}"
       - "{{.RUNNER}} ruff check --fix {{.SOURCES}}"
 
   deptry:
-    desc: Check dependency usage
     cmds:
       - "{{.RUNNER}} deptry {{.SOURCES_ROOT}}"
 
   typecheck:
-    desc: Run mypy
     cmds:
       - "{{.RUNNER}} mypy {{.SOURCES_ROOT}}"
 
-  # =============================
-  # Tests
-  # =============================
-
   test:
-    desc: Run tests
     env:
       ENV: test
     cmds:
@@ -136,57 +180,28 @@ tasks:
       - ENV=test {{.RUNNER}} pytest -vv
 
   testcov:
-    desc: Run tests with coverage
     env:
       ENV: test
     cmds:
       - docker compose up -d --wait postgres-test
       - "{{.RUNNER}} coverage run -m pytest -vv"
       - "{{.RUNNER}} coverage report -m"
-      - "{{.RUNNER}} coverage xml"
 
-  test-ci:
-    desc: Run tests in CI mode
-    env:
-      ENV: ci
-    cmds:
-      - "{{.RUNNER}} pytest"
-
-  # =============================
-  # Git Hooks
-  # =============================
-
-  pre-commit:
-    desc: Run pre-commit hooks
-    cmds:
-      - uvx pre-commit run
-
-  # =============================
-  # Full CI
-  # =============================
-
-  # Monitoring with Prometheus
-  # obs-up:
-  #   desc: Start Prometheus + Grafana
-  #   cmds:
-  #     - docker compose up -d prometheus grafana
-
-  # obs-down:
-  #   desc: Stop observability stack
-  #   cmds:
-  #     - docker compose stop prometheus grafana
-
-  # stack:
-  #   desc: Run FULL infrastructure
-  #   cmds:
-  #     - docker compose up -d --wait postgres
-  #     - task: obs-up
-  #     - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
-
-  all:
-    desc: Run full CI pipeline
+  ci:
+    desc: Full CI pipeline
     cmds:
       - task: format
       - task: deptry
       - task: typecheck
       - task: testcov
+
+# =========================================================
+# DIAGNOSTICS
+# =========================================================
+
+  doctor:
+    desc: Diagnose infra state
+    cmds:
+      - docker compose ps
+      - docker compose logs --tail=50 web
+      - docker compose logs --tail=50 postgres

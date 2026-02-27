@@ -24,6 +24,10 @@ class APIException(Exception):
         super().__init__(self.detail)
 
 
+class PermissionDeniedError(Exception):
+    pass
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """
     Register exception handlers for the FastAPI application.
