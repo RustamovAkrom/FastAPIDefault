@@ -55,7 +55,7 @@ async def get_version() -> VersionResponse:
 # =========================================================
 
 
-def _verify_metrics_key(key: str = Header(default="")):
+def _verify_metrics_key(key: str = Header(default="")) -> None:
     """
     Optional security for metrics endpoint.
     Works ONLY if key configured.

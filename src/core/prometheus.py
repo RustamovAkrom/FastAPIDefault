@@ -36,7 +36,7 @@ def _build_registry() -> CollectorRegistry:
     """
     if os.getenv("PROMETHEUS_MULTIPROC_DIR"):
         registry = CollectorRegistry()
-        multiprocess.MultiProcessCollector(registry)
+        multiprocess.MultiProcessCollector(registry)  # type: ignore[no-untyped-call]
         return registry
 
     return CollectorRegistry()
