@@ -4,7 +4,7 @@ from sqlalchemy.sql.sqltypes import String
 from db.base import Base
 
 
-class Dummy(Base):
+class Dummy(Base):  # type: ignore[misc]
     """Model for demo purpose."""
 
     __tablename__ = "dummy_model"

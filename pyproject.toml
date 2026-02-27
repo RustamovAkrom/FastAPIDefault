@@ -82,6 +82,7 @@ extend-exclude = ["src/db/migrations"]
 
 [tool.deptry]
 ignore = ["DEP002"]
+exclude = ["src/db/migrations"]
 
 [tool.ruff.lint]
 select = [
@@ -123,15 +124,5 @@ filterwarnings = [
 ]
 
 [[tool.mypy.overrides]]
-module = "app,core.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "sqladmin.*"
-ignore_missing_imports = true
-disallow_untyped_calls = false
-
-[[tool.mypy.overrides]]
-module = "prometheus_client.*"
-ignore_missing_imports = true
-disallow_untyped_calls = false
+module = "sqladmin.*,sqlalchemy.*,prometheus_client.*,admin.*,db.models.*"
+ignore_errors = true

@@ -6,27 +6,16 @@ vars:
   SOURCES: src tests
   SOURCES_ROOT: src
 
-# =========================================================
-# DEFAULT
-# =========================================================
-
 tasks:
-
   default:
-    cmds:
-      - task: help
+    cmd: task --list
 
-  help:
-    desc: Show available tasks
-    cmds:
-      - task --list
-
-# =========================================================
-# ENVIRONMENT
-# =========================================================
+  # =========================================================
+  # DEVELOPMENT & RUNNING
+  # =========================================================
 
   init:
-    desc: First project setup (deps + db + migrations)
+    desc: Initialize project (install deps + setup database)
     env:
       ENV: local
     cmds:
@@ -36,16 +25,16 @@ tasks:
       - docker compose down
 
   run:
-    desc: Run the application locally for development
+    desc: Run application locally (FastAPI dev mode)
     env:
       ENV: local
     cmds:
-      - "docker compose up -d --wait postgres || true"
+      - docker compose up -d --wait postgres || true
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
       - "{{.RUNNER}} fastapi dev src/dev.py"
-      
+
   dev:
-    desc: Run backend locally (with docker postgres)
+    desc: Run backend locally (Uvicorn reload mode)
     env:
       ENV: local
     cmds:
@@ -53,18 +42,24 @@ tasks:
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
       - "{{.RUNNER}} uvicorn dev:app --reload"
 
-  prod:
-    desc: Run full production stack
-    env:
-      ENV: prod
+  stack:
+    desc: Run full stack (DB + Monitoring + Migrations)
     cmds:
-      - docker compose up -d --build
-      - docker compose up
+      - docker compose up -d --wait postgres
+      - task: obs
+      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+
+  # =========================================================
+  # DOCKER & INFRASTRUCTURE
+  # =========================================================
+
+  up:
+    desc: Start database container
+    cmd: docker compose up -d --wait postgres
 
   down:
-    desc: Stop ALL containers
-    cmds:
-      - docker compose down
+    desc: Stop all containers
+    cmd: docker compose down
 
   restart:
     desc: Restart infrastructure
@@ -72,114 +67,97 @@ tasks:
       - docker compose down
       - docker compose up -d --build
 
-# =========================================================
-# DATABASE
-# =========================================================
+  logs:
+    desc: Show logs (all services)
+    cmd: docker compose logs -f
 
-  db-up:
-    desc: Apply migrations
+  logs-web:
+    desc: Show logs (backend only)
+    cmd: docker compose logs -f web
+
+  logs-db:
+    desc: Show logs (postgres only)
+    cmd: docker compose logs -f postgres
+
+  doctor:
+    desc: Check infrastructure status
+    cmds:
+      - docker compose ps
+      - docker compose logs --tail=50 web
+      - docker compose logs --tail=50 postgres
+
+  # =========================================================
+  # DATABASE
+  # =========================================================
+
+  db-migrate:
+    desc: Apply database migrations
     cmds:
       - docker compose up -d --wait postgres
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
 
   db-reset:
-    desc: Full reset DB (DROP ALL DATA)
+    desc: Reset database (DROP ALL DATA)
     cmds:
       - docker compose down -v
       - docker compose up -d --wait postgres
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
 
   db-shell:
-    desc: Connect to postgres shell
-    cmds:
-      - docker compose exec postgres psql -U ${POSTGRES_USER} ${POSTGRES_DB}
+    desc: Open postgres shell
+    cmd: docker compose exec postgres psql -U ${POSTGRES_USER} ${POSTGRES_DB}
 
-# =========================================================
-# ADMIN
-# =========================================================
-
-  create_admin:
-    desc: Create super admin
+  admin-create:
+    desc: Create superadmin user
     cmds:
       - docker compose up -d --wait postgres
       - "{{.RUNNER}} python -m scripts.create_admin"
 
-# =========================================================
-# MONITORING / OBSERVABILITY
-# =========================================================
+  # =========================================================
+  # MONITORING & OBSERVABILITY
+  # =========================================================
 
   obs:
-    desc: Start Prometheus + Grafana + Loki + Promtail
-    cmds:
-      - docker compose up -d prometheus grafana loki promtail
+    desc: Start monitoring stack (Prometheus, Grafana, Loki)
+    cmd: docker compose up -d prometheus grafana loki promtail
 
   obs-down:
-    desc: Stop observability stack
-    cmds:
-      - docker compose stop prometheus grafana loki promtail
+    desc: Stop monitoring stack
+    cmd: docker compose stop prometheus grafana loki promtail
 
-  logs:
-    desc: Show logs for all services
-    cmds:
-      - docker compose logs -f
-
-  logs-web:
-    desc: Show backend logs
-    cmds:
-      - docker compose logs -f web
-
-  logs-db:
-    desc: Show postgres logs
-    cmds:
-      - docker compose logs -f postgres
-
-# =========================================================
-# FULL STACK
-# =========================================================
-
-  stack:
-    desc: Run FULL infra DB + Monitoring + Migrations
-    cmds:
-      - docker compose up -d --wait postgres
-      - task: obs
-      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
-
-  stack-reset:
-    desc: Full infra reset
-    cmds:
-      - docker compose down -v
-      - task: stack
-
-# =========================================================
-# CI / QUALITY
-# =========================================================
+  # =========================================================
+  # CODE QUALITY & TESTING
+  # =========================================================
 
   lint:
-    cmds:
-      - "{{.RUNNER}} ruff check {{.SOURCES}}"
+    desc: Run linter (ruff check)
+    cmd: "{{.RUNNER}} ruff check {{.SOURCES}}"
 
   format:
-    aliases: ["fmt"]
+    desc: Format code with ruff
+    aliases: [fmt]
     cmds:
       - "{{.RUNNER}} ruff format {{.SOURCES}}"
       - "{{.RUNNER}} ruff check --fix {{.SOURCES}}"
 
-  deptry:
-    cmds:
-      - "{{.RUNNER}} deptry {{.SOURCES_ROOT}}"
+  deps:
+    desc: Check dependencies (deptry)
+    cmd: "{{.RUNNER}} deptry {{.SOURCES_ROOT}}"
 
   typecheck:
-    cmds:
-      - "{{.RUNNER}} mypy src tests"
+    desc: Type checking (mypy)
+    cmd: "{{.RUNNER}} mypy src tests"
 
   test:
+    desc: Run unit tests
     env:
       ENV: test
     cmds:
       - docker compose up -d --wait postgres-test
       - ENV=test {{.RUNNER}} pytest -vv
 
-  testcov:
+  test-cov:
+    desc: Run tests with coverage report
     env:
       ENV: test
     cmds:
@@ -187,21 +165,23 @@ tasks:
       - "{{.RUNNER}} coverage run -m pytest -vv"
       - "{{.RUNNER}} coverage report -m"
 
-  ci:
-    desc: Full CI pipeline
+  test-ci:
+    desc: Run tests (CI mode)
+    env:
+      ENV: ci
+    cmd: "{{.RUNNER}} pytest"
+
+  # =========================================================
+  # CI / COMPLETE CHECKS
+  # =========================================================
+  pre-commit:
+    desc: Run pre-commit
+    cmd: uvx pre-commit run
+    
+  all:
+    desc: Run all quality checks (lint, format, deps, typecheck, tests)
     cmds:
       - task: format
-      - task: deptry
+      - task: deps
       - task: typecheck
-      - task: testcov
-
-# =========================================================
-# DIAGNOSTICS
-# =========================================================
-
-  doctor:
-    desc: Diagnose infra state
-    cmds:
-      - docker compose ps
-      - docker compose logs --tail=50 web
-      - docker compose logs --tail=50 postgres
+      - task: test-cov

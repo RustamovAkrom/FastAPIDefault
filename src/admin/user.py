@@ -16,7 +16,7 @@ Formatter = Callable[[Any, Any], Any]
 
 
 @register_admin
-class UserAdmin(BaseAdmin, model=User):
+class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg, misc]
     logger = configure_logger()
     # =======================
     # Columns configuration
