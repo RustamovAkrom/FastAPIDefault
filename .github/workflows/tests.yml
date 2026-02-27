@@ -56,7 +56,11 @@ jobs:
       
       - name: Run tests with pytest
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/fastapi_default_test
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: "5432"
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fastapi_default_test
           ENV: test
           SECRET_KEY: test-secret-key-for-testing
         run: |
