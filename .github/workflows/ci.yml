@@ -143,7 +143,13 @@ jobs:
 
       - name: Run tests
         env:
-          DATABASE_URL: "postgresql://test:test@localhost:5432/test"
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+          ENV: ci
+          SECRET_KEY: test-secret-key
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           RUNNER="uv run" task test-ci
