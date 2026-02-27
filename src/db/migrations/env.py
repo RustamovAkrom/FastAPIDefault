@@ -1,13 +1,26 @@
 import asyncio
 from logging.config import fileConfig
+import sys
+from pathlib import Path
 
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.future import Connection
 
-from core.settings import get_settings
-from db.meta import meta
-from db.models import load_all_models
+# Handle both local development and Docker container paths
+if str(Path(__file__).parent.parent.parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+# Use relative imports that work in both environments
+try:
+    from core.settings import get_settings
+    from db.meta import meta
+    from db.models import load_all_models
+except ImportError:
+    # Fallback for local development
+    from src.core.settings import get_settings
+    from src.db.meta import meta
+    from src.db.models import load_all_models
 
 # load models BEFORE metadata
 load_all_models()

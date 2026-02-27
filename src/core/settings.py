@@ -46,6 +46,7 @@ class Settings(BaseSettings):
             env_settings,
             file_secret_settings,
         )
+
     # APP CORE
     app_title: str = "FastAPI Template Project"
     app_name: str = "fastapidefault"
@@ -84,13 +85,15 @@ class Settings(BaseSettings):
     prometheus_metrics_key: str | None = None
 
     # Loki
-    loki_enabled: bool = True
+    loki_enabled: bool = False
     loki_url: str = "http://loki:3100"
 
     # Grafana
+    grafana_enabled: bool = False
     grafana_url: str = "http://grafana:3000"
 
     # Sentry
+    sentry_enabled: bool = False
     sentry_dsn: str | None = None
     sentry_traces_sample_rate: float = 1.0
 
@@ -107,11 +110,11 @@ class Settings(BaseSettings):
     @property
     def is_prod(self) -> bool:
         return self.env == "prod"
-    
+
     @property
     def is_dev(self) -> bool:
         return self.env in ("local", "dev")
-    
+
     # Database urls
     @property
     def postgres_url(self) -> str:

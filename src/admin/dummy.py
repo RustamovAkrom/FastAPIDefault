@@ -1,4 +1,4 @@
-from core.admin import register_admin, BaseAdmin
+from core.admin import BaseAdmin, register_admin
 from db.models.dummy import Dummy
 
 

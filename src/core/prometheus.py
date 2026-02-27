@@ -6,20 +6,19 @@ from collections.abc import Awaitable, Callable
 
 from fastapi import Request, Response
 from prometheus_client import (
-    Counter,
-    Histogram,
-    Gauge,
-    Info,
-    CollectorRegistry,
-    multiprocess,
-    generate_latest,
     CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    Info,
+    generate_latest,
+    multiprocess,
 )
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response as StarletteResponse
 
 from core.settings import get_settings
-
 
 settings = get_settings()
 APP_NAME = settings.app_name
@@ -28,6 +27,7 @@ APP_NAME = settings.app_name
 # =========================================================
 # MULTIPROCESS REGISTRY (FOR UVICORN WORKERS / DOCKER)
 # =========================================================
+
 
 def _build_registry() -> CollectorRegistry:
     """
@@ -104,6 +104,7 @@ APP_INFO.info(
 # METRICS ENDPOINT (/metrics)
 # =========================================================
 
+
 async def metrics_endpoint() -> StarletteResponse:
     """
     Prometheus scrape endpoint.
@@ -115,6 +116,7 @@ async def metrics_endpoint() -> StarletteResponse:
 # =========================================================
 # MIDDLEWARE
 # =========================================================
+
 
 class MetricsMiddleware(BaseHTTPMiddleware):
     """
@@ -133,7 +135,6 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
-
         # ignore non-API + metrics endpoint
         if request.url.path.startswith("/metrics"):
             return await call_next(request)

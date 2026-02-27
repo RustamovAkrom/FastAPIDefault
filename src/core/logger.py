@@ -19,7 +19,7 @@ def configure_logger() -> loguru.Logger:
     logger.remove()
 
     # Log level
-    level="DEBUG" if settings.debug else "INFO"
+    level = "DEBUG" if settings.debug else "INFO"
 
     # Console logger
     logger.add(
@@ -46,7 +46,7 @@ def configure_logger() -> loguru.Logger:
         rotation="10 MB",
         retention="10 days",
         enqueue=True,
-        serialize=not settings.debug, # JSON in prod
+        serialize=not settings.debug,  # JSON in prod
     )
 
     # error logs only

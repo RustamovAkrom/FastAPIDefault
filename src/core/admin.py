@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from sqladmin import Admin, ModelView
 
+from admin import load_all_models
 from admin.auth import AdminAuth
 from core.database import get_db_engine
-from admin import load_all_models
-
 
 _admin_views: list[type[ModelView]] = []
 

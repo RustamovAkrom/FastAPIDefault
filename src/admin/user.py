@@ -6,12 +6,11 @@ from sqladmin import action
 from sqladmin.exceptions import SQLAdminException
 from sqladmin.filters import AllUniqueStringValuesFilter, BooleanFilter
 
-from core.admin import register_admin, BaseAdmin
+from core.admin import BaseAdmin, register_admin
 from core.database import async_session
 from core.logger import configure_logger
 from core.security import hash_password
 from db.models.user import User, UserRole
-
 
 Formatter = Callable[[Any, Any], Any]
 

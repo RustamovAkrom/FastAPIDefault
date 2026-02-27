@@ -1,4 +1,5 @@
 from passlib.context import CryptContext
+
 from core.logger import configure_logger
 
 logger = configure_logger()

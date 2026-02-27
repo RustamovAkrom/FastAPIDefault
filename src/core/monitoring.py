@@ -2,13 +2,13 @@ import time
 from importlib.metadata import version
 from typing import Annotated
 
-from fastapi import APIRouter, Header, Response, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Response
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from pydantic import BaseModel
 
-from core.settings import get_settings
-from core.prometheus import REGISTRY  # IMPORTANT: use same registry!
-from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
+from core.prometheus import REGISTRY  # IMPORTANT: use same registry!
+from core.settings import get_settings
 
 router = APIRouter(tags=["Monitoring"])
 
@@ -16,6 +16,7 @@ router = APIRouter(tags=["Monitoring"])
 # =========================================================
 # RESPONSE MODELS
 # =========================================================
+
 
 class HealthcheckResponse(BaseModel):
     timestamp: int
@@ -32,6 +33,7 @@ class VersionResponse(BaseModel):
 # =========================================================
 # BASIC MONITORING
 # =========================================================
+
 
 @router.get("/healthcheck", summary="Service healthcheck")
 def healthcheck() -> HealthcheckResponse:
@@ -52,6 +54,7 @@ async def get_version() -> VersionResponse:
 # =========================================================
 # PROMETHEUS METRICS
 # =========================================================
+
 
 def _verify_metrics_key(key: str = Header(default="")):
     """
