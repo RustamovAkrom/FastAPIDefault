@@ -48,6 +48,11 @@ jobs:
           curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
           uv tool install go-task-bin || true
 
+      - name: Sync dependencies
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          uv sync
+
       - name: Run linter
         run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -76,6 +81,11 @@ jobs:
           export PATH="$HOME/.local/bin:$PATH"
           curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
           uv tool install go-task-bin || true
+
+      - name: Sync dependencies
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          uv sync
 
       - name: Run typecheck
         run: |
@@ -125,6 +135,11 @@ jobs:
           export PATH="$HOME/.local/bin:$PATH"
           curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh
           uv tool install go-task-bin || true
+
+      - name: Sync dependencies
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          uv sync
 
       - name: Run tests
         env:
