@@ -28,10 +28,11 @@ APP_NAME = settings.app_name
 # REGISTRY (MULTIPROCESS SAFE)
 # =========================================================
 
+
 def _build_registry() -> CollectorRegistry:
     if os.getenv("PROMETHEUS_MULTIPROC_DIR"):
         registry = CollectorRegistry()
-        multiprocess.MultiProcessCollector(registry)
+        multiprocess.MultiProcessCollector(registry)  # type: ignore[no-untyped-call]
         return registry
 
     return CollectorRegistry()
@@ -106,6 +107,7 @@ APP_INFO.info(
 # METRICS ENDPOINT
 # =========================================================
 
+
 async def metrics_endpoint() -> StarletteResponse:
     data = generate_latest(REGISTRY)
     return StarletteResponse(data, media_type=CONTENT_TYPE_LATEST)
@@ -115,14 +117,13 @@ async def metrics_endpoint() -> StarletteResponse:
 # MIDDLEWARE
 # =========================================================
 
-class MetricsMiddleware(BaseHTTPMiddleware):
 
+class MetricsMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self,
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
-
         # не трогаем metrics endpoint
         if request.url.path.startswith("/metrics"):
             return await call_next(request)

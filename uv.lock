@@ -309,7 +309,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "sentry-sdk", extra = ["fastapi"] },
     { name = "sqladmin" },
-    { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "sqlalchemy", extra = ["asyncio", "mypy"] },
     { name = "starlette" },
     { name = "uvicorn" },
     { name = "yarl" },
@@ -355,7 +355,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.9.1" },
     { name = "sentry-sdk", extras = ["fastapi"], specifier = ">=2.29.1" },
     { name = "sqladmin", specifier = ">=0.23.0" },
-    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.41" },
+    { name = "sqlalchemy", extras = ["asyncio", "mypy"], specifier = ">=2.0.41" },
     { name = "starlette", specifier = ">=0.46.2" },
     { name = "uvicorn", specifier = ">=0.34.2" },
     { name = "yarl", specifier = ">=1.20.0" },
@@ -1341,6 +1341,9 @@ wheels = [
 [package.optional-dependencies]
 asyncio = [
     { name = "greenlet" },
+]
+mypy = [
+    { name = "mypy" },
 ]
 
 [[package]]
