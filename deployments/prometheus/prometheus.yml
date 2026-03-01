@@ -5,6 +5,5 @@ scrape_configs:
   - job_name: "fastapi"
     metrics_path: /metrics
     static_configs:
-    - targets: ["${PROMETHEUS_TARGET}"]
-      # - targets: ["web:8000"] # for prod
+      - targets: ["web:8000"] # for prod
       # - targets: ["host.docker.internal:8000"] # for local and dev modes for production use only web:8000

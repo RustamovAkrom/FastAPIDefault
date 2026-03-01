@@ -25,18 +25,13 @@ APP_NAME = settings.app_name
 
 
 # =========================================================
-# MULTIPROCESS REGISTRY (FOR UVICORN WORKERS / DOCKER)
+# REGISTRY (MULTIPROCESS SAFE)
 # =========================================================
 
-
 def _build_registry() -> CollectorRegistry:
-    """
-    If running with multiple workers (uvicorn/gunicorn),
-    use Prometheus multiprocess registry.
-    """
     if os.getenv("PROMETHEUS_MULTIPROC_DIR"):
         registry = CollectorRegistry()
-        multiprocess.MultiProcessCollector(registry)  # type: ignore[no-untyped-call]
+        multiprocess.MultiProcessCollector(registry)
         return registry
 
     return CollectorRegistry()
@@ -46,14 +41,21 @@ REGISTRY = _build_registry()
 
 
 # =========================================================
-# METRICS (GLOBAL SINGLETONS)
-# IMPORTANT: NEVER create metrics inside functions!
+# METRICS
 # =========================================================
 
 REQUEST_TOTAL = Counter(
     f"{APP_NAME}_requests_total",
     "Total HTTP requests",
     ["app", "method", "endpoint", "status"],
+    registry=REGISTRY,
+)
+
+# NEW: status class counter (2xx / 4xx / 5xx)
+REQUEST_STATUS_CLASS = Counter(
+    f"{APP_NAME}_requests_by_status_class_total",
+    "Total HTTP requests grouped by status class",
+    ["app", "method", "endpoint", "status_class"],
     registry=REGISTRY,
 )
 
@@ -101,14 +103,10 @@ APP_INFO.info(
 
 
 # =========================================================
-# METRICS ENDPOINT (/metrics)
+# METRICS ENDPOINT
 # =========================================================
 
-
 async def metrics_endpoint() -> StarletteResponse:
-    """
-    Prometheus scrape endpoint.
-    """
     data = generate_latest(REGISTRY)
     return StarletteResponse(data, media_type=CONTENT_TYPE_LATEST)
 
@@ -117,25 +115,15 @@ async def metrics_endpoint() -> StarletteResponse:
 # MIDDLEWARE
 # =========================================================
 
-
 class MetricsMiddleware(BaseHTTPMiddleware):
-    """
-    Production-ready Prometheus middleware.
-
-    Captures:
-    - total requests
-    - latency
-    - errors
-    - exceptions
-    - in-progress requests
-    """
 
     async def dispatch(
         self,
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
-        # ignore non-API + metrics endpoint
+
+        # не трогаем metrics endpoint
         if request.url.path.startswith("/metrics"):
             return await call_next(request)
 
@@ -146,15 +134,14 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         endpoint = route.path if route else request.url.path
 
         start_time = time.perf_counter()
-
         IN_PROGRESS.labels(app=app_label).inc()
 
         try:
             response = await call_next(request)
-            status = str(response.status_code)
+            status_code = response.status_code
+            status = str(status_code)
 
         except Exception:
-            # exceptions metric
             EXCEPTIONS_TOTAL.labels(
                 app=app_label,
                 endpoint=endpoint,
@@ -172,6 +159,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
         duration = time.perf_counter() - start_time
 
+        # total
         REQUEST_TOTAL.labels(
             app=app_label,
             method=method,
@@ -179,13 +167,24 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             status=status,
         ).inc()
 
+        # histogram
         REQUEST_DURATION.labels(
             app=app_label,
             method=method,
             endpoint=endpoint,
         ).observe(duration)
 
-        if response.status_code >= 400:
+        # status class (2xx / 4xx / 5xx)
+        status_class = f"{status_code // 100}xx"
+        REQUEST_STATUS_CLASS.labels(
+            app=app_label,
+            method=method,
+            endpoint=endpoint,
+            status_class=status_class,
+        ).inc()
+
+        # errors
+        if status_code >= 400:
             REQUEST_ERRORS.labels(
                 app=app_label,
                 method=method,

@@ -7,7 +7,7 @@ from yarl import URL
 
 ENV_FILE_PATH = (
     {
-        "local": ".env",
+        "local": ".env.local",
         "dev": ".env.dev",
         "test": ".env.test",
         "ci": ".env.ci",
