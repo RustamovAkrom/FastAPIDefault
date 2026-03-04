@@ -22,5 +22,5 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password: Mapped[str] = mapped_column(String(255))
 
-    role: Mapped[str] = mapped_column(SQLEnum(UserRole), default=UserRole.USER, nullable=False)
+    role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole), default=UserRole.USER, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

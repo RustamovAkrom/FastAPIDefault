@@ -90,6 +90,12 @@ tasks:
   # DATABASE
   # =========================================================
 
+  db-revision:
+    desc: Generate new migration
+    cmds:
+      - docker compose up -d --wait postgres
+      - "{{.RUNNER}} alembic -c src/alembic.ini revision --autogenerate -m '{{.MSG}}'"
+      
   db-migrate:
     desc: Apply database migrations
     cmds:
