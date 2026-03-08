@@ -1,451 +1,450 @@
- # 🚀 FastAPI Default — Production-Ready Template
+# 🚀 FastAPI Default — Production-Ready FastAPI Template
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/fastapi-0.100+-green.svg)](https://fastapi.tiangolo.com/)
-[![PostgreSQL](https://img.shields.io/badge/postgresql-16-blue.svg)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/docker-compose-blue.svg)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+Репозиторий:  
+https://github.com/RustamovAkrom/FastAPIDefault
 
-**Полнофункциональный, масштабируемый и production-ready шаблон для создания современных REST API на FastAPI с учётом best practices.**
+**FastAPI Default** — production-ready шаблон backend-сервиса на **FastAPI**, включающий:
 
-> Включает всё, что вам нужно для быстрого старта: async SQLAlchemy, миграции Alembic, мониторинг Prometheus/Grafana, интеграция Sentry, админ-панель SQLAdmin и Docker для production-деплоя.
+- Async SQLAlchemy
+- Alembic migrations
+- PostgreSQL
+- Prometheus / Grafana / Loki monitoring
+- Sentry error tracking
+- SQLAdmin admin panel
+- Docker + Docker Compose
+- Taskfile automation
+- Production-ready конфигурацию
 
----
-
-## ✨ Основные возможности
-
-- **🔥 FastAPI + Uvicorn** — асинхронный ASGI сервер для высокой производительности
-- **🗄️ SQLAlchemy 2.x Async** — асинхронная работа с БД с type hints
-- **📦 Alembic** — управление миграциями БД
-- **🐘 PostgreSQL** — надежная реляционная БД (с поддержкой локального Docker)
-- **📊 Prometheus + Grafana** — полный мониторинг приложения и инфраструктуры
-- **🔔 Sentry** — track ошибок и performance monitoring
-- **🛡️ SQLAdmin** — встроённая админ-панель с RBAC
-- **🔐 Security Best Practices** — non-root контейнеры, resource limits, capability dropping
-- **🐳 Docker + Docker Compose** — готовые конфигурации для dev и production
-- **⚡ Taskfile** — удобные команды для разработки (`init`, `run`, `test`, `upgrade-db`)
-- **🧪 Pytest** — готовая структура для тестирования
+Проект предназначен для **быстрого старта production backend сервиса** с соблюдением современных best practices.
 
 ---
 
-## 📋 Требования
+# 📦 Основные технологии
 
-- **Python 3.11+**
-- **Docker & Docker Compose** (если используете контейнеры)
-- **PostgreSQL 16** (если не используете Docker)
-
----
-
-<!-- ## 📦 Установка через pip
-
-Самый быстрый способ начать работу:
-
-```bash
-# Установите пакет
-pip install fastapi-default
-
-# Создайте новый проект на основе шаблона
-fastapi-default create my-api
-cd my-api
-
-# Запустите приложение
-docker compose up -d
-```
-
-📚 Полная документация по публикации на PyPI: [PUBLISHING.md](PUBLISHING.md) -->
-
-## 🚀 Быстрый старт (Docker) — рекомендуется
-
-### 1️⃣ Клонируйте репозиторий
-
-```bash
-git clone https://github.com/yourusername/fastapi-default.git
-cd fastapi-default
-```
-
-### 2️⃣ Настройте переменные окружения
-
-```bash
-cp .env.example .env
-# Отредактируйте .env по необходимости
-```
-
-### 3️⃣ Запустите приложение
-
-```bash
-docker compose up -d --build
-```
-
-### 4️⃣ Проверьте, что всё работает
-
-```bash
-# Основное API
-curl http://localhost:8001/healthcheck
-
-# Метрики Prometheus
-curl http://localhost:8001/metrics
-
-# Grafana dashboard
-open http://localhost:3000
-```
-
-✅ **Готово!** Приложение работает на http://localhost:8001
+- FastAPI — https://fastapi.tiangolo.com  
+- SQLAlchemy — https://www.sqlalchemy.org  
+- Alembic — https://alembic.sqlalchemy.org  
+- PostgreSQL — https://www.postgresql.org  
+- Docker — https://www.docker.com  
+- Prometheus — https://prometheus.io  
+- Grafana — https://grafana.com  
+- Loki — https://grafana.com/oss/loki  
+- Sentry — https://sentry.io  
+- SQLAdmin — https://github.com/long2ice/sqladmin  
+- python-jose — https://github.com/mpdavis/python-jose  
+- passlib — https://passlib.readthedocs.io  
 
 ---
 
-## 🏃 Локальная разработка (без контейнеров)
+# 📋 Требования
 
-### 1️⃣ Создайте виртуальное окружение
+Перед запуском проекта установите:
 
-```bash
-python -m venv .venv
+- Python **3.11+**
+- Docker
+- Docker Compose
+- Task (Taskfile runner)
 
-# Windows (PowerShell)
-.venv\Scripts\Activate.ps1
+Установить **Task** можно с официального сайта:
 
-# Linux/Mac
-source .venv/bin/activate
-```
-
-### 2️⃣ Установите зависимости
-
-```bash
-pip install -e ".[dev,test]"
-```
-
-### 3️⃣ Настройте БД
-
-```bash
-export POSTGRES_HOST=localhost
-export POSTGRES_PORT=5432
-export POSTGRES_USER=postgres
-export POSTGRES_PASSWORD=yourpassword
-export POSTGRES_DB=fastapi_default
-```
-
-### 4️⃣ Запустите миграции
-
-```bash
-alembic upgrade head
-```
-
-### 5️⃣ Запустите приложение
-
-```bash
-uvicorn app:create_app --factory --reload
-```
+https://taskfile.dev/installation/
 
 ---
 
-## 📁 Структура проекта
+# 📁 Структура проекта
 
 ```
-fastapi-default/
-├── src/
-│   ├── app.py                  # Фабрика приложения
-│   ├── main.py                 # Точка входа
-│   ├── api/                    # API роутеры (версионированные)
-│   ├── core/                   # Конфигурация и инструменты
-│   │   ├── settings.py         # Переменные окружения
-│   │   ├── database.py         # SQLAlchemy engine
-│   │   ├── security.py         # Bcrypt хеширование
-│   │   ├── logger.py           # Loguru конфигурация
-│   │   ├── monitoring.py       # Health endpoints
-│   │   ├── prometheus.py       # Metrics middleware
-│   │   └── sentry.py           # Sentry error tracking
-│   ├── db/
-│   │   ├── models/             # ORM модели (User, Product и т.д.)
-│   │   ├── crud/               # CRUD операции
-│   │   ├── migrations/         # Alembic DB миграции
-│   │   └── dependencies.py     # Dependency injection
-│   ├── admin/                  # Admin panel (SQLAdmin)
-│   ├── schemas/                # Pydantic DTO модели
-│   └── services/               # Внешние интеграции (Redis, RabbitMQ и т.д.)
-├── tests/                      # Pytest тесты с фикстурами
-├── deployments/
-│   ├── compose/                # Docker Compose конфигурации
-│   ├── prometheus/             # Prometheus скрейпинг конфиг
-│   ├── grafana/                # Grafana dashboards и provisioning
-│   └── loki/                   # Loki логирование (promtail конфиг)
-├── docs/                       # Подробная документация
-│   ├── ARCHITECTURE.md         # Архитектура и структура
-│   ├── DEPLOYMENT.md           # Гайд по production деплою
-│   ├── OBSERVABILITY.md        # Мониторинг и tracking
-│   └── BACKEND_ROADMAP.md      # План развития проекта
-├── docker-compose.yml          # Docker Compose stack (dev + tools)
-├── Dockerfile                  # Production-ready Dockerfile
-├── pyproject.toml              # Конфигурация проекта (зависимости)
-├── Taskfile.yml                # Команды для разработки (task init, task run и т.д.)
-└── README.md                   # Этот файл
-```
+
+FastAPIDefault
+│
+├─ src
+│  ├─ api
+│  ├─ admin
+│  ├─ core
+│  ├─ db
+│  │  ├─ models
+│  │  └─ migrations
+│  ├─ schemas
+│  └─ services
+│
+├─ deployments
+│  ├─ compose
+│  │  └─ backend
+│  │     └─ Dockerfile
+│  ├─ grafana
+│  ├─ loki
+│  └─ prometheus
+│
+├─ tests
+├─ docker-compose.yml
+├─ Taskfile.yml
+├─ pyproject.toml
+└─ README.md
+
+````
 
 ---
 
-## ⚙️ Конфигурация
+# ⚙️ Переменные окружения
 
-### Переменные окружения (`.env`)
+Проект использует **Pydantic Settings**.
 
-**Минимально обязательные:**
+Файл `.env` выбирается автоматически по переменной `ENV`.
+
+| ENV | используемый файл |
+|----|----|
+| local | `.env.local` |
+| test | `.env.test` |
+| ci | `.env.ci` |
+| prod | `.env` |
+
+---
+
+# 🧾 Минимальный `.env.local`
+
+Создайте файл `.env.local`.
+
+Пример конфигурации:
 
 ```env
-ENV=dev                         # local | dev | test | prod
+ENV=local
+APP_TITLE="FastAPI Default"
+APP_NAME=fastapidefault
 DEBUG=true
+SECRET_KEY="your-secret-key-minimum-32-chars-change-this-in-production"
 
 POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=changeme
-POSTGRES_DB=fastapi_db
-```
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=fastapi_default
+POSTGRES_TIMEOUT=30
 
-**Опциональные (для дополнительного функционала):**
+API_V1_STR=/api/v1
+PROJECT_NAME=FastAPI Default
 
-```env
-# Sentry (ошибки и performance)
-SENTRY_DSN=https://...@sentry.io/...
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
 
-# Admin panel
-ADMIN_ENABLED=true
-ADMIN_USER=admin
-ADMIN_PASSWORD=adminpass
+CORS_ORIGINS=["http://localhost:3000","http://localhost:8001","http://localhost:9090"]
+CORS_ALLOW_CREDENTIALS=true
 
-# Prometheus security
+DB_POOL_SIZE=10
+DB_MAX_OVERFLOW=20
+DB_POOL_RECYCLE=3600
+DB_POOL_PRE_PING=true
+
+LOG_LEVEL=INFO
+
+SENTRY_DSN=
+SENTRY_ENVIRONMENT=prod
+SENTRY_TRACES_SAMPLE_RATE=0.1
+
 PROMETHEUS_ENABLED=true
-PROMETHEUS_METRICS_KEY=your-secret-key
+PROMETHEUS_METRICS_KEY=
 
-# Логирование
-LOG_LEVEL=DEBUG
-LOG_JSON=false
-LOG_TO_FILE=true
-```
+ADMIN_ENABLED=true
+ADMIN_USER=
+ADMIN_PASSWORD=
+ADMIN_PATH=/admin
 
-Подробный список см. в [src/core/settings.py](src/core/settings.py)
+COMPOSE_PROJECT_NAME=fastapi-default
+WORKERS=2
+````
 
 ---
 
-## 📦 Команды для разработки
+# 🚀 Быстрый старт
 
-Используйте **Taskfile** (или запускайте вручную):
+### 1. Клонировать репозиторий
 
 ```bash
-# Инициализация проекта (БД + миграции)
+git clone https://github.com/RustamovAkrom/FastAPIDefault.git
+cd FastAPIDefault
+```
+
+---
+
+### 2. Создать `.env.local`
+
+```
+cp .env.example .env.local
+```
+
+или создать вручную.
+
+---
+
+### 3. Инициализация проекта
+
+```
 task init
+```
 
-# Запустить приложение (dev mode с hot-reload)
+Команда выполнит:
+
+* установку зависимостей
+* запуск PostgreSQL
+* применение миграций
+* остановку контейнеров
+
+---
+
+### 4. Запуск проекта (dev режим)
+
+```
 task run
+```
 
-# Запустить тесты с покрытием
-task test
+или
 
-# Применить миграции БД
-task upgrade-db
+```
+task dev
+```
 
-# Создать новую миграцию
-task make-migration DESC="Add new field"
+Приложение будет доступно:
 
-# Просмотр логов Docker контейнеров
-task logs
+```
+http://localhost:8001
+```
 
-# Остановить все контейнеры
+---
+
+# 🐳 Production запуск (Docker)
+
+```
+docker compose up -d --build
+```
+
+После запуска API будет доступен:
+
+```
+http://localhost:8001
+```
+
+Контейнер внутри Docker использует порт **8000**,
+но наружу он пробрасывается как **8001**.
+
+```
+ports:
+  - 8001:8000
+```
+
+---
+
+# 📊 Monitoring
+
+Запустить monitoring stack:
+
+```
+task obs
+```
+
+Доступные сервисы:
+
+| сервис     | адрес                                          |
+| ---------- | ---------------------------------------------- |
+| Prometheus | [http://localhost:9090](http://localhost:9090) |
+| Grafana    | [http://localhost:3000](http://localhost:3000) |
+| Loki       | [http://localhost:3100](http://localhost:3100) |
+
+Метрики приложения:
+
+```
+http://localhost:8001/metrics
+```
+
+Healthcheck:
+
+```
+http://localhost:8001/healthcheck
+```
+
+---
+
+# 🧾 Команды Taskfile
+
+Все основные операции выполняются через **Taskfile**.
+
+---
+
+## Development
+
+```
+task init
+```
+
+Инициализация проекта.
+
+```
+task run
+```
+
+Запуск FastAPI dev server.
+
+```
+task dev
+```
+
+Запуск uvicorn с hot reload.
+
+```
+task stack
+```
+
+Запуск полного стека (DB + monitoring + migrations).
+
+---
+
+## Docker
+
+```
+task up
+```
+
+Запуск postgres.
+
+```
 task down
 ```
 
----
+Остановить контейнеры.
 
-## 🗄️ Работа с базой данных
-
-### Применить миграции
-
-```bash
-# В Docker
-docker compose exec web alembic upgrade head
-
-# Локально
-alembic upgrade head
+```
+task restart
 ```
 
-### Создать новую миграцию
+Перезапуск инфраструктуры.
 
-```bash
-# Автогенерируемая миграция (нужно изменить модели)
-alembic revision --autogenerate -m "Add user table"
-
-# Пустая миграция
-alembic revision -m "Custom migration"
+```
+task logs
 ```
 
-### Откатить миграцию
-
-```bash
-alembic downgrade -1
-```
+Просмотр логов.
 
 ---
 
-## 🧪 Тестирование
+## Database
 
-```bash
-# Все тесты
+Создать миграцию:
+
+```
+task db-revision MSG="add new table"
+```
+
+Создает новую Alembic миграцию.
+
+```
+task db-migrate
+```
+
+Применяет все миграции базы данных.
+
+```
+task db-reset
+```
+
+⚠ **ОПАСНО:** удаляет Docker volumes и полностью **стирает базу данных**.
+Команда выполняет `docker compose down -v`.
+Использовать **только в development**.
+
+```
+task db-shell
+```
+
+Открывает PostgreSQL shell внутри контейнера.
+
+---
+
+## Admin
+
+```
+task admin-create
+```
+
+Создает администратора.
+
+Админ панель доступна:
+
+```
+http://localhost:8001/admin
+```
+
+---
+
+## Monitoring
+
+```
+task obs
+```
+
+Запускает Prometheus, Grafana и Loki.
+
+```
+task obs-down
+```
+
+Останавливает monitoring stack.
+
+---
+
+## Code Quality
+
+```
+task lint
+```
+
+Запуск Ruff линтера.
+
+```
+task format
+```
+
+Форматирование кода.
+
+```
+task deps
+```
+
+Проверка зависимостей.
+
+```
+task typecheck
+```
+
+Проверка типов (MyPy).
+
+---
+
+## Тесты
+
+```
 task test
+```
 
-# С покрытием
-pytest --cov=src tests/
+Запуск unit тестов.
 
-# Конкретный тест
-pytest tests/test_dummy.py::test_something -v
+```
+task test-cov
+```
+
+Запуск тестов с покрытием.
+
+---
+
+# 🧪 Проверка после запуска
+
+```
+curl http://localhost:8001/healthcheck
+```
+
+```
+curl http://localhost:8001/metrics
 ```
 
 ---
 
-## 📊 Мониторинг
+# 📄 Лицензия
 
-### Prometheus Metrics
-
-**http://localhost:8001/metrics**
-
-Доступные метрики:
-- `fastapi_requests_total` — всего запросов
-- `fastapi_request_duration_seconds` — время ответа
-- `fastapi_request_errors_total` — ошибки
-- `fastapi_requests_in_progress` — запросов в процессе
-
-### Grafana Dashboards
-
-**http://localhost:3000**
-- **Пользователь:** admin
-- **Пароль:** admin
-
-Включены готовые dashboards для мониторинга приложения и инфраструктуры.
-
-### Sentry Error Tracking
-
-Настроить через переменную `SENTRY_DSN`. Все ошибки в production будут автоматически трекироваться.
-
-Подробнее см. [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md)
-
----
-
-## 🔐 Security бест-практики
-
-✅ **Non-root контейнеры** — приложение работает от пользователя `appuser`  
-✅ **Ограниченные capabilities** — удалены ненужные Docker permissions  
-✅ **Resource limits** — CPU и memory лимиты для каждого сервиса  
-✅ **Bcrypt hashing** — безопасное хранение паролей  
-✅ **SQL injection protection** — параметризованные SQLAlchemy запросы  
-✅ **CORS настройка** — контролируемые cross-origin запросы  
-
----
-
-## 📚 Подробная документация
-
-| Документ | Описание |
-|----------|----------|
-| [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) | Архитектура, структура проекта, инициализация |
-| [**DEPLOYMENT.md**](docs/DEPLOYMENT.md) | Production деплой (AWS, GCP, VPS, Kubernetes) |
-| [**OBSERVABILITY.md**](docs/OBSERVABILITY.md) | Prometheus, Grafana, Sentry, health checks |
-| [**BACKEND_ROADMAP.md**](docs/BACKEND_ROADMAP.md) | План развития, новые фичи, todo |
-
----
-
-## 🐛 Часто задаваемые вопросы
-
-**Q: Как добавить новый endpoint?**
-
-Создайте файл в `src/api/api_v1/` и зарегистрируйте router в `src/api/router.py`
-
-**Q: Как добавить новую модель БД?**
-
-Создайте класс в `src/db/models/`, затем запустите `task make-migration`
-
-**Q: Где хранятся логи приложения?**
-
-В контейнере: `/var/log/app.log`. Локально: `logs/app.log`
-
-**Q: Как изменить port приложения?**
-
-Используйте переменную окружения `PORT` в `.env` или отредактируйте `docker-compose.yml`
-
-**Q: Как использовать Redis для кеша?**
-
-Redis уже включен в конфиге Docker Compose (закомментирован). Раскомментируйте и используйте `aioredis`
-
-Из других вопросов см. [docs/](docs/)
-
----
-
-## 💡 Примеры кода
-
-### Создать новый API endpoint
-
-```python
-# src/api/api_v1/products.py
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from db.dependencies import get_db_session
-from schemas.product import ProductSchema
-
-router = APIRouter(prefix="/products", tags=["products"])
-
-@router.get("/", response_model=list[ProductSchema])
-async def list_products(session: AsyncSession = Depends(get_db_session)):
-    return {"products": []}
-```
-
-### Написать CRUD операции
-
-```python
-# src/db/crud/product.py
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from db.models.product import Product
-
-class ProductCRUD:
-    def __init__(self, session: AsyncSession):
-        self.session = session
-    
-    async def get_all(self):
-        result = await self.session.execute(select(Product))
-        return result.scalars().all()
-```
-
----
-
-## 📦 Установка (PyPI)
-
-**Coming soon!** Скоро будет возможность установить как pip пакет:
-
-```bash
-pip install fastapi-default
-
-# Создать новый проект
-fastapi-default create my-api
-cd my-api
-task init
-task run
-```
-
----
-
-## 🤝 Contributing
-
-Приветствуются contributions! Пожалуйста:
-
-1. Fork репозиторий
-2. Создайте branch: `git checkout -b feature/your-feature`
-3. Commit: `git commit -am 'Add feature'`
-4. Push: `git push origin feature/your-feature`
-5. Pull Request
-
----
-
-## 📄 Лицензия
-
-MIT License. Подробнее см. [LICENSE](LICENSE)
-
----
-
-## 🙏 Аккредиты
-
-Спасибо FastAPI сообществу и open-source контрибьютерам за вдохновение!
-
-**Используйте FastAPI Default для создания масштабируемых API!** ⭐
+#### [MIT License](/LICENSE)

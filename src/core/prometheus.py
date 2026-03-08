@@ -24,11 +24,7 @@ settings = get_settings()
 APP_NAME = settings.app_name
 
 
-# =========================================================
 # REGISTRY (MULTIPROCESS SAFE)
-# =========================================================
-
-
 def _build_registry() -> CollectorRegistry:
     if os.getenv("PROMETHEUS_MULTIPROC_DIR"):
         registry = CollectorRegistry()
@@ -40,11 +36,7 @@ def _build_registry() -> CollectorRegistry:
 
 REGISTRY = _build_registry()
 
-
-# =========================================================
 # METRICS
-# =========================================================
-
 REQUEST_TOTAL = Counter(
     f"{APP_NAME}_requests_total",
     "Total HTTP requests",
@@ -103,21 +95,13 @@ APP_INFO.info(
 )
 
 
-# =========================================================
 # METRICS ENDPOINT
-# =========================================================
-
-
 async def metrics_endpoint() -> StarletteResponse:
     data = generate_latest(REGISTRY)
     return StarletteResponse(data, media_type=CONTENT_TYPE_LATEST)
 
 
-# =========================================================
 # MIDDLEWARE
-# =========================================================
-
-
 class MetricsMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self,

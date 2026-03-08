@@ -42,6 +42,12 @@ tasks:
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
       - "{{.RUNNER}} uvicorn dev:app --reload"
 
+  prod:
+    desc: Run production stack (build images + run)
+    cmds:
+      - docker compose up -d --build
+      - docker compose up
+
   stack:
     desc: Run full stack (DB + Monitoring + Migrations)
     cmds:

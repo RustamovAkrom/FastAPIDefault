@@ -8,7 +8,6 @@ from yarl import URL
 ENV_FILE_PATH = (
     {
         "local": ".env.local",
-        "dev": ".env.dev",
         "test": ".env.test",
         "ci": ".env.ci",
         "prod": ".env",
@@ -52,7 +51,7 @@ class Settings(BaseSettings):
     app_name: str = "fastapidefault"
     app_version: str = "1.0.0"
 
-    env: Literal["local", "test", "ci", "dev", "prod"] = "local"
+    env: Literal["local", "test", "ci", "prod"] = "local"
 
     debug: bool = True
     root_path: str = ""
@@ -119,8 +118,8 @@ class Settings(BaseSettings):
         return self.env == "prod"
 
     @property
-    def is_dev(self) -> bool:
-        return self.env in ("local", "dev")
+    def is_local(self) -> bool:
+        return self.env in ("local",)
 
     # Database urls
     @property

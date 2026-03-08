@@ -12,11 +12,7 @@ from core.settings import get_settings
 router = APIRouter(tags=["Monitoring"])
 
 
-# =========================================================
 # RESPONSE MODELS
-# =========================================================
-
-
 class HealthcheckResponse(BaseModel):
     timestamp: int
 
@@ -29,11 +25,7 @@ class VersionResponse(BaseModel):
     version: str
 
 
-# =========================================================
 # BASIC MONITORING
-# =========================================================
-
-
 @router.get("/healthcheck", summary="Service healthcheck")
 def healthcheck() -> HealthcheckResponse:
     return HealthcheckResponse(timestamp=int(time.time()))
@@ -50,11 +42,7 @@ async def get_version() -> VersionResponse:
     return VersionResponse(version=version(settings.app_name))
 
 
-# =========================================================
 # PROMETHEUS METRICS
-# =========================================================
-
-
 def _verify_metrics_key(key: str = Header(default="")) -> None:
     """
     Optional security for metrics endpoint.
@@ -62,7 +50,7 @@ def _verify_metrics_key(key: str = Header(default="")) -> None:
     """
     settings = get_settings()
 
-    # if key not set → public endpoint (for Prometheus scraping)
+    # if key not set -> public endpoint (for Prometheus scraping)
     if not settings.prometheus_metrics_key:
         return
 
