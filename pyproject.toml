@@ -1,9 +1,9 @@
 [project]
 name = "fastapi-default"
-version = "1.0.0"
+version = "1.1.0"
 description = "Production-ready FastAPI template with async SQLAlchemy, Prometheus monitoring, Sentry tracking, and Docker support"
 authors = [
-    { name = "Your Name", email = "your.email@example.com" }
+    { name = "RustamovAkrom", email = "akromjonrustamov56@gmail.com" }
 ]
 readme = "README.md"
 license = { text = "MIT" }
@@ -60,10 +60,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/fastapi-default"
-Documentation = "https://github.com/yourusername/fastapi-default#readme"
-Repository = "https://github.com/yourusername/fastapi-default.git"
-Issues = "https://github.com/yourusername/fastapi-default/issues"
+Homepage = "https://github.com/RustamovAkrom/FastAPIDefault"
+Documentation = "https://github.com/RustamovAkrom/FastAPIDefault#readme"
+Repository = "https://github.com/RustamovAkrom/FastAPIDefault.git"
+Issues = "https://github.com/RustamovAkrom/FastAPIDefault/issues"
 
 [dependency-groups]
 dev = ["fastapi[standard]", "deptry"]

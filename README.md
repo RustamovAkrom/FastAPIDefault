@@ -1,5 +1,6 @@
-# 🚀 FastAPI Default — Production-Ready FastAPI Template
+![banner](/assets/banner.png)
 
+# 🚀 FastAPI Default — Production-Ready FastAPI Template
 Репозиторий:  
 https://github.com/RustamovAkrom/FastAPIDefault
 
