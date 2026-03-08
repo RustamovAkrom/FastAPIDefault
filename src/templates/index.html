@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="hero">
+
+<div class="hero__wrapper">
+
+<h1 class="hero__title">
+
+FastAPI
+
+<span class="hero__accent">
+Default
+</span>
+
+</h1>
+
+<p class="hero__subtitle">
+
+Minimal production-ready backend template  
+for building scalable APIs with clean architecture.
+
+</p>
+
+<div class="cta">
+
+<a href="{{ base_url }}/docs" class="cta__button cta__button--primary">
+Get Started
+</a>
+
+<a href="{{ base_url }}/api/v1" class="cta__button cta__button--secondary">
+Explore API
+</a>
+
+</div>
+
+</div>
+
+</section>
+
+{% endblock %}

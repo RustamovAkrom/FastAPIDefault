@@ -1,6 +1,10 @@
-from fastapi import FastAPI
+from pathlib import Path
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import ORJSONResponse
+from fastapi.responses import HTMLResponse, ORJSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from api.router import api_router
 from core.admin import init_admin
@@ -11,6 +15,10 @@ from core.monitoring import router as monitoring_router
 from core.prometheus import MetricsMiddleware
 from core.sentry import init_sentry
 from core.settings import get_settings
+
+BASE_DIR = Path(__file__).resolve().parent
+
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
 def create_app() -> FastAPI:
@@ -51,4 +59,18 @@ def create_app() -> FastAPI:
 
     # initialize optional admin panel
     init_admin(app)
+
+    # Home page
+    @app.get("/", response_class=HTMLResponse, include_in_schema=False)
+    async def home(request: Request) -> HTMLResponse:
+        base_url = f"{request.url.scheme}://{request.headers.get('host')}"
+        hostname = request.url.hostname
+
+        return templates.TemplateResponse(
+            "index.html", {"request": request, "base_url": base_url, "hostname": hostname}
+        )
+
+    # Static files
+    app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+
     return app
