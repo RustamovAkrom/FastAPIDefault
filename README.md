@@ -1,6 +1,6 @@
 ![banner](/assets/banner.png)
 
-# 🚀 FastAPI Default — Production-Ready FastAPI Template
+# FastAPI Default - Production-Ready FastAPI Template
 Репозиторий:  
 https://github.com/RustamovAkrom/FastAPIDefault
 
@@ -22,18 +22,18 @@ https://github.com/RustamovAkrom/FastAPIDefault
 
 # 📦 Основные технологии
 
-- FastAPI — https://fastapi.tiangolo.com  
-- SQLAlchemy — https://www.sqlalchemy.org  
-- Alembic — https://alembic.sqlalchemy.org  
-- PostgreSQL — https://www.postgresql.org  
-- Docker — https://www.docker.com  
-- Prometheus — https://prometheus.io  
-- Grafana — https://grafana.com  
-- Loki — https://grafana.com/oss/loki  
-- Sentry — https://sentry.io  
-- SQLAdmin — https://github.com/long2ice/sqladmin  
-- python-jose — https://github.com/mpdavis/python-jose  
-- passlib — https://passlib.readthedocs.io  
+- [FastAPI](https://fastapi.tiangolo.com)
+- [SQLAlchemy](https://www.sqlalchemy.org)
+- [Alembic](https://alembic.sqlalchemy.org)
+- [PostgreSQL](https://www.postgresql.org)
+- [Docker](https://www.docker.com)
+- [Prometheus](https://prometheus.io)
+- [Grafana](https://grafana.com)
+- [Loki](https://grafana.com/oss/loki)
+- [Sentry](https://sentry.io)
+- [SQLAdmin](https://github.com/long2ice/sqladmin)
+- [python-jose](https://github.com/mpdavis/python-jose)
+- [passlib](https://passlib.readthedocs.io)
 
 ---
 
@@ -55,34 +55,105 @@ https://taskfile.dev/installation/
 # 📁 Структура проекта
 
 ```
-
-FastAPIDefault
-│
-├─ src
-│  ├─ api
-│  ├─ admin
-│  ├─ core
-│  ├─ db
-│  │  ├─ models
-│  │  └─ migrations
-│  ├─ schemas
-│  └─ services
-│
-├─ deployments
-│  ├─ compose
-│  │  └─ backend
-│  │     └─ Dockerfile
-│  ├─ grafana
-│  ├─ loki
-│  └─ prometheus
-│
-├─ tests
-├─ docker-compose.yml
+FastAPI-Default/
+├─ deployments/
+│  ├─ compose/
+│  │  └─ backend/
+│  │     ├─ Dockerfile
+│  │     ├─ entrypoint
+│  │     ├─ start
+│  │     └─ celery/
+│  │        ├─ worker
+│  │        ├─ beat
+│  │        └─ flower
+│  ├─ grafana/
+│  │  ├─ dashboards/
+│  │  │  ├─ fastapi.json
+│  │  │  └─ node-exporter.json
+│  │  └─ provisioning/
+│  │     ├─ dashboards/dashboard.yml
+│  │     └─ datasources/datasource.yml
+│  ├─ loki/
+│  │  └─ promtail.yml
+│  └─ prometheus/
+│     └─ prometheus.yml
+├─ scripts/
+│  └─ create_admin.py
+├─ src/
+│  ├─ admin/
+│  │  ├─ user.py
+│  │  ├─ dummy.py
+│  │  └─ __init__.py
+│  ├─ api/
+│  │  ├─ api_v1/
+│  │  │  ├─ dummy.py
+│  │  │  └─ __init__.py
+│  │  ├─ router.py
+│  │  └─ __init__.py
+│  ├─ core/
+│  │  ├─ admin.py
+│  │  ├─ admin_permissions.py
+│  │  ├─ database.py
+│  │  ├─ exceptions.py
+│  │  ├─ lifespan.py
+│  │  ├─ logger.py
+│  │  ├─ monitoring.py
+│  │  ├─ prometheus.py
+│  │  ├─ requests.py
+│  │  ├─ security.py
+│  │  ├─ sentry.py
+│  │  ├─ settings.py
+│  │  └─ __init__.py
+│  ├─ db/
+│  │  ├─ crud/
+│  │  │  ├─ dummy.py
+│  │  │  └─ __init__.py
+│  │  ├─ migrations/
+│  │  │  ├─ versions/
+│  │  │  ├─ env.py
+│  │  │  ├─ script.py.mako
+│  │  │  └─ README
+│  │  ├─ models/
+│  │  │  ├─ user.py
+│  │  │  ├─ dummy.py
+│  │  │  └─ __init__.py
+│  │  ├─ base.py
+│  │  ├─ dependencies.py
+│  │  └─ meta.py
+│  ├─ logs/
+│  │  ├─ app.log
+│  │  └─ errors.log
+│  ├─ middlewares/
+│  ├─ schemas/
+│  │  ├─ base.py
+│  │  ├─ dummy.py
+│  │  └─ __init__.py
+│  ├─ services/
+│  │  └─ __init__.py
+│  ├─ alembic.ini
+│  ├─ app.py
+│  ├─ dev.py
+│  └─ main.py
+├─ tests/
+│  ├─ conftest.py
+│  ├─ test_dummy.py
+│  └─ __init__.py
+├─ .dockerignore
+├─ .env
+├─ .env.ci
+├─ .env.example
+├─ .env.local
+├─ .env.test
+├─ .gitignore
+├─ .gitlab-ci.yml
+├─ .pre-commit-config.yaml
+├─ README.md
 ├─ Taskfile.yml
+├─ docker-compose.yml
 ├─ pyproject.toml
-└─ README.md
+└─ uv.lock
 
-````
+```
 
 ---
 
@@ -130,25 +201,6 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 
 CORS_ORIGINS=["http://localhost:3000","http://localhost:8001","http://localhost:9090"]
 CORS_ALLOW_CREDENTIALS=true
-
-DB_POOL_SIZE=10
-DB_MAX_OVERFLOW=20
-DB_POOL_RECYCLE=3600
-DB_POOL_PRE_PING=true
-
-LOG_LEVEL=INFO
-
-SENTRY_DSN=
-SENTRY_ENVIRONMENT=prod
-SENTRY_TRACES_SAMPLE_RATE=0.1
-
-PROMETHEUS_ENABLED=true
-PROMETHEUS_METRICS_KEY=
-
-ADMIN_ENABLED=true
-ADMIN_USER=
-ADMIN_PASSWORD=
-ADMIN_PATH=/admin
 
 COMPOSE_PROJECT_NAME=fastapi-default
 WORKERS=2

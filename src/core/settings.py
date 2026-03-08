@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     app_title: str = "FastAPI Template Project"
     app_name: str = "fastapidefault"
     app_version: str = "1.0.0"
+    api_v1_str: str = "/api/v1"
 
     env: Literal["local", "test", "ci", "prod"] = "local"
 
@@ -101,6 +102,7 @@ class Settings(BaseSettings):
     # Sentry
     sentry_enabled: bool = False
     sentry_dsn: str | None = None
+    sentry_environment: Literal["local", "test", "ci", "prod"] = env
     sentry_traces_sample_rate: float = 1.0
 
     # Logging
