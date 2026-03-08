@@ -39,16 +39,13 @@ https://github.com/RustamovAkrom/FastAPIDefault
 
 # 📋 Требования
 
-Перед запуском проекта установите:
+Установить если у вас их нет:
 
-- Python **3.11+**
-- Docker
-- Docker Compose
-- Task (Taskfile runner)
-
-Установить **Task** можно с официального сайта:
-
-https://taskfile.dev/installation/
+- [Python **3.11+**](https://www.python.org/downloads/)
+- [Docker](https://docs.docker.com/engine/install/)
+- [Task (Taskfile runner)](https://taskfile.dev/installation/
+)
+- [UV (Package Manager)](https://docs.astral.sh/uv/getting-started/installation/)
 
 ---
 
