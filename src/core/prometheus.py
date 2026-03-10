@@ -24,18 +24,11 @@ settings = get_settings()
 APP_NAME = settings.app_name
 
 
-<<<<<<< HEAD
 # REGISTRY (MULTIPROCESS SAFE)
-=======
-# =========================================================
-# REGISTRY (MULTIPROCESS SAFE)
-# =========================================================
-
->>>>>>> d9cea57 (fix: ready to deployments)
 def _build_registry() -> CollectorRegistry:
     if os.getenv("PROMETHEUS_MULTIPROC_DIR"):
         registry = CollectorRegistry()
-        multiprocess.MultiProcessCollector(registry)
+        multiprocess.MultiProcessCollector(registry)  # type: ignore[no-untyped-call]
         return registry
 
     return CollectorRegistry()
@@ -43,15 +36,7 @@ def _build_registry() -> CollectorRegistry:
 
 REGISTRY = _build_registry()
 
-<<<<<<< HEAD
 # METRICS
-=======
-
-# =========================================================
-# METRICS
-# =========================================================
-
->>>>>>> d9cea57 (fix: ready to deployments)
 REQUEST_TOTAL = Counter(
     f"{APP_NAME}_requests_total",
     "Total HTTP requests",
@@ -110,37 +95,19 @@ APP_INFO.info(
 )
 
 
-<<<<<<< HEAD
 # METRICS ENDPOINT
-=======
-# =========================================================
-# METRICS ENDPOINT
-# =========================================================
-
->>>>>>> d9cea57 (fix: ready to deployments)
 async def metrics_endpoint() -> StarletteResponse:
     data = generate_latest(REGISTRY)
     return StarletteResponse(data, media_type=CONTENT_TYPE_LATEST)
 
 
 # MIDDLEWARE
-<<<<<<< HEAD
 class MetricsMiddleware(BaseHTTPMiddleware):
-=======
-# =========================================================
-
-class MetricsMiddleware(BaseHTTPMiddleware):
-
->>>>>>> d9cea57 (fix: ready to deployments)
     async def dispatch(
         self,
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
-<<<<<<< HEAD
-=======
-
->>>>>>> d9cea57 (fix: ready to deployments)
         # не трогаем metrics endpoint
         if request.url.path.startswith("/metrics"):
             return await call_next(request)

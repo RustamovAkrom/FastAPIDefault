@@ -8,10 +8,6 @@ from yarl import URL
 ENV_FILE_PATH = (
     {
         "local": ".env.local",
-<<<<<<< HEAD
-=======
-        "dev": ".env.dev",
->>>>>>> d9cea57 (fix: ready to deployments)
         "test": ".env.test",
         "ci": ".env.ci",
         "prod": ".env",
