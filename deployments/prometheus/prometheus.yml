@@ -17,3 +17,4 @@ scrape_configs:
   - job_name: "postgres"
     static_configs:
       - targets: ["postgres-exporter:9187"]
+      # - targets: ["host.docker.internal:8000"] # for local and dev modes for production use only web:8000
