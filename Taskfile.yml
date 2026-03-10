@@ -131,11 +131,11 @@ tasks:
 
   obs:
     desc: Start monitoring stack (Prometheus, Grafana, Loki)
-    cmd: docker compose up -d prometheus grafana loki promtail
+    cmd: docker compose up -d prometheus grafana loki promtail node-exporter postgres-exporter
 
   obs-down:
     desc: Stop monitoring stack
-    cmd: docker compose stop prometheus grafana loki promtail
+    cmd: docker compose stop prometheus grafana loki promtail node-exporter postgres-exporter
 
   # =========================================================
   # CODE QUALITY & TESTING
