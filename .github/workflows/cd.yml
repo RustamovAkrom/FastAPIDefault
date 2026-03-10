@@ -1,4 +1,4 @@
-name: Deploy FastAPI Application to Server for Production
+name: Deploy FastAPI Application to Production Server
 
 on:
   push:
@@ -7,29 +7,36 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to Server
     runs-on: ubuntu-latest
-    # Deploy only when SSH secrets are configured
-    if: ${{ secrets.SSH_HOST != '' && secrets.SSH_USER != '' && secrets.SSH_PASSWORD != '' }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
 
-      - name: Deploy to Server
+    if: ${{ secrets.SSH_HOST && secrets.SSH_USER && secrets.SSH_PASSWORD && secrets.DEPLOY_PATH }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy application via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
-          port: ${{ secrets.SSH_PORT != '' && secrets.SSH_PORT || '22' }}
           password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          script_stop: true
           script: |
             set -e
+
+            echo "Starting deployment..."
+
             cd ${{ secrets.DEPLOY_PATH }}
-            echo "Pulling latest changes from main branch..."
-            git fetch --all
+
+            git fetch origin
             git reset --hard origin/main
-            echo "Building and restarting Docker containers..."
-            docker compose pull
+
+            docker compose pull || true
             docker compose up -d --build
-            echo "Cleaning up unused Docker images..."
-            docker image prune -af
-            echo "Deployment completed successfully!"
+
+            docker image prune -af || true
+
+            echo "Deployment completed!"
