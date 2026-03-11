@@ -1,55 +1,66 @@
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import Any, ClassVar
 
 from fastapi import Request
 from sqladmin import action
 from sqladmin.exceptions import SQLAdminException
 from sqladmin.filters import AllUniqueStringValuesFilter, BooleanFilter
 
-from core.admin import BaseAdmin, register_admin
+from core.admin.base import BaseAdmin
+from core.admin.permissions import get_role, get_user_id
+from core.admin.registry import register_admin
 from core.database import async_session
 from core.logger import configure_logger
 from core.security import hash_password
 from db.models.user import User, UserRole
 
-Formatter = Callable[[Any, Any], Any]
-
 
 @register_admin
-class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg, misc]
+class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg]
     logger = configure_logger()
 
-    column_list = [
+    # =====================
+    # PERMISSIONS
+    # =====================
+
+    can_delete: ClassVar[bool] = True
+    can_create: ClassVar[bool] = True
+    can_edit: ClassVar[bool] = True
+    can_view_details: ClassVar[bool] = True
+
+    # =====================
+    # LIST VIEW
+    # =====================
+
+    column_list: ClassVar = (
         User.id,
         User.username,
         User.email,
         User.role,
         User.is_active,
-    ]
+    )
 
-    column_searchable_list = [
+    column_searchable_list: ClassVar = (
         User.username,
         User.email,
-    ]
+    )
 
-    column_sortable_list = [
+    column_sortable_list: ClassVar = (
         User.id,
         User.username,
         User.role,
-    ]
+    )
 
-    column_filters = [
+    column_filters: ClassVar = (
         BooleanFilter(User.is_active),
         AllUniqueStringValuesFilter(User.role),
-    ]
+    )
 
-    column_details_exclude_list = [
-        User.password,
-    ]
+    column_details_exclude_list: ClassVar = (User.password,)
 
-    # =======================
-    # UI formatting (MYPY SAFE)
-    # =======================
+    # =====================
+    # UI FORMATTERS
+    # =====================
 
     @staticmethod
     def format_is_active(model: User, _: Any) -> str:
@@ -57,39 +68,43 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg, misc]
 
     @staticmethod
     def format_role(model: User, _: Any) -> str:
-        return f"👑 {model.role}"
+        return f"👑 {model.role.value}"
 
-    column_formatters = cast(
-        dict[Any, Formatter],
-        {
-            User.is_active: format_is_active,
-            User.role: format_role,
-        },
-    )
-
-    form_choices = {
-        "role": [
-            ("superadmin", "Super Admin"),
-            ("admin", "Admin"),
-            ("moderator", "Moderator"),
-            ("user", "User"),
-        ]
+    column_formatters: ClassVar[dict[Any, Callable[..., Any]]] = {
+        User.is_active: format_is_active,
+        User.role: format_role,
     }
 
-    # =======================
-    # Meta info
-    # =======================
+    # =====================
+    # FORM OPTIONS
+    # =====================
 
-    name = "User"
-    name_plural = "Users"
-    icon = "fa-solid fa-user"
-    identity = "user"
-    category = "Accounts"
-    category_icon = "fa-solid fa-user"
+    form_choices: ClassVar = {"role": [(role.value, role.name.title()) for role in UserRole]}
 
-    # =========================================================
-    # RBAC + VALIDATION LOGIC
-    # =========================================================
+    # =====================
+    # META
+    # =====================
+
+    name: ClassVar[str] = "User"
+    name_plural: ClassVar[str] = "Users"
+
+    icon: ClassVar[str] = "fa-solid fa-user"
+    identity: ClassVar[str] = "user"
+
+    category: ClassVar[str] = "Accounts"
+    category_icon: ClassVar[str] = "fa-solid fa-user"
+
+    # =====================================================
+    # ACCESS CONTROL
+    # =====================================================
+
+    def is_accessible(self, request: Request) -> bool:
+        role = get_role(request)
+        return role in {UserRole.ADMIN, UserRole.SUPERADMIN}
+
+    # =====================================================
+    # MODEL VALIDATION
+    # =====================================================
 
     async def on_model_change(
         self,
@@ -98,111 +113,71 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg, misc]
         is_created: bool,
         request: Request,
     ) -> None:
-        current_role: UserRole | None = request.session.get("role")
-        current_user_id: int | None = request.session.get("admin_user_id")
+        actor_role = get_role(request)
+        actor_id = get_user_id(request)
 
-        # Normalize role
-        new_role_raw = data.get("role")
+        # normalize email
+        email_raw = data.get("email")
+        if isinstance(email_raw, str):
+            data["email"] = email_raw.strip().lower()
+
+        # normalize role
         new_role: UserRole | None = None
+        role_raw = data.get("role")
 
-        if isinstance(new_role_raw, str):
+        if isinstance(role_raw, str):
             try:
-                new_role = UserRole(new_role_raw.lower())
+                new_role = UserRole(role_raw)
             except ValueError:
-                try:
-                    new_role = UserRole[new_role_raw]
-                except Exception:
-                    new_role = None
+                pass
 
-        # ===== RBAC RULES =====
+        # ===== RBAC =====
 
-        if current_role == UserRole.ADMIN and new_role == UserRole.SUPERADMIN:
-            self.logger.warning(
-                "Admin cannot assign superadmin role", extra={"actor_id": current_user_id, "target_id": model.id}
-            )
-            raise SQLAdminException("Admin cannot assign SUPERADMIN role.")
+        if actor_role == UserRole.ADMIN and new_role == UserRole.SUPERADMIN:
+            raise SQLAdminException("🚫 Admin cannot assign SUPERADMIN role.")
 
         if not is_created and model.role == UserRole.SUPERADMIN:
-            self.logger.warning(
-                "SUPERADMIN cannot be modified.",
-                extra={
-                    "actor_id": current_user_id,
-                    "target_id": model.id,
-                },
-            )
-            raise SQLAdminException("SUPERADMIN cannot be modified.")
+            raise SQLAdminException("🚫 SUPERADMIN cannot be modified.")
 
-        if not is_created and model.id == current_user_id:
-            if new_role and new_role != model.role:
-                self.logger.warning(
-                    "You cannot change your own role.",
-                    extra={
-                        "actor_id": current_user_id,
-                        "target_id": model.id,
-                    },
-                )
-                raise SQLAdminException("You cannot change your own role.")
+        if not is_created and actor_id == model.id and new_role and new_role != model.role:
+            raise SQLAdminException("⚠ You cannot change your own role.")
 
-        # ===== PASSWORD HANDLING =====
+        # ===== PASSWORD =====
 
         raw_password = data.get("password")
 
         if is_created:
-            if not raw_password:
-                self.logger.warning(
-                    "Password is required when creating a user.",
-                    extra={
-                        "actor_id": current_user_id,
-                        "target_id": model.id,
-                    },
-                )
+            if not isinstance(raw_password, str) or not raw_password:
                 raise SQLAdminException("Password is required when creating a user.")
 
             data["password"] = hash_password(raw_password)
 
         else:
-            if raw_password:
+            if isinstance(raw_password, str) and raw_password:
                 data["password"] = hash_password(raw_password)
             else:
                 data.pop("password", None)
 
+    # =====================================================
+    # DELETE VALIDATION
+    # =====================================================
+
     async def on_model_delete(self, model: User, request: Request) -> None:
-        current_user_id: int | None = request.session.get("admin_user_id")
-        current_role: UserRole | None = request.session.get("role")
+        actor_id = get_user_id(request)
+        actor_role = get_role(request)
 
         if model.role == UserRole.SUPERADMIN:
-            self.logger.warning(
-                "SUPERADMIN cannot be deleted.",
-                extra={
-                    "actor_id": current_user_id,
-                    "target_id": model.id,
-                },
-            )
-            raise SQLAdminException("SUPERADMIN cannot be deleted.")
+            raise SQLAdminException("🚫 SUPERADMIN cannot be deleted.")
 
-        if model.id == current_user_id:
-            self.logger.warning(
-                "You cannot delete your own account.",
-                extra={
-                    "actor_id": current_user_id,
-                    "target_id": model.id,
-                },
-            )
-            raise SQLAdminException("You cannot delete your own account.")
+        if actor_id == model.id:
+            raise SQLAdminException("⚠ You cannot delete your own account.")
 
-        if current_role == UserRole.ADMIN and model.role == UserRole.ADMIN:
-            self.logger.warning(
-                "Admin cannot delete another admin.",
-                extra={
-                    "actor_id": current_user_id,
-                    "target_id": model.id,
-                },
-            )
-            raise SQLAdminException("Admin cannot delete another admin.")
+        if actor_role == UserRole.ADMIN and model.role == UserRole.ADMIN:
+            raise SQLAdminException("🚫 Admin cannot delete another admin.")
 
-    # =========================================================
+    # =====================================================
     # ADMIN ACTIONS
-    # =========================================================
+    # =====================================================
 
     @action(
         name="deactivate_users",
@@ -218,7 +193,7 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg, misc]
             for user_id in ids:
                 user: User | None = await session.get(User, user_id)
 
-                if not user:
+                if user is None:
                     continue
 
                 if user.role == UserRole.SUPERADMIN:

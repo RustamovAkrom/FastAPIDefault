@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
 
     # Admin panel settings
-    admin_enabled: bool = False
+    admin_enabled: bool = debug
     admin_user: str | None = None
     admin_password: str | None = None
     admin_path: str = "/admin"
