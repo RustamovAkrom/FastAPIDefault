@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -18,8 +16,6 @@ from core.prometheus import MetricsMiddleware
 from core.sentry import init_sentry
 from core.settings import get_settings
 from middlewares import RequestIDMiddleware, SecurityHeadersMiddleware
-
-BASE_DIR = Path(__file__).resolve().parent
 
 
 def create_app() -> FastAPI:
@@ -83,7 +79,7 @@ def create_app() -> FastAPI:
         init_admin(app)
 
     # Templates
-    templates = Jinja2Templates(directory=BASE_DIR / "templates")
+    templates = Jinja2Templates(directory=settings.BASE_DIR / "templates")
 
     # Home page
     @app.get("/", response_class=HTMLResponse, include_in_schema=False)
@@ -96,8 +92,13 @@ def create_app() -> FastAPI:
         )
 
     # Static files
-    static_dir = BASE_DIR / "static"
+    static_dir = settings.BASE_DIR / settings.static_root
     if static_dir.exists():
-        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+        app.mount(settings.static_url, StaticFiles(directory=str(static_dir)), name=settings.static_root)
+
+    # Media files
+    media_dir = settings.BASE_DIR / settings.media_root
+    if media_dir.exists():
+        app.mount(settings.media_url, StaticFiles(directory=str(media_dir)), name=settings.media_root)
 
     return app

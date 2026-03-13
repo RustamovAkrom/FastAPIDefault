@@ -1,5 +1,6 @@
 import os
 from functools import cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
@@ -22,6 +23,8 @@ class Settings(BaseSettings):
     These parameters can be configured
     with environment variables.
     """
+
+    BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE_PATH,
@@ -140,6 +143,46 @@ class Settings(BaseSettings):
     @property
     def postgres_sync_url(self) -> str:
         return self.postgres_url.replace("+asyncpg", "")
+
+    # static files
+    static_root: str = "static"
+    static_url: str = "/static"
+
+    # Media files
+    media_root: str = "media"
+    media_url: str = "/media"
+    max_upload_size_mb: int = 5
+
+    allowed_image_extensions: list[str] = [
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
+    ]
+
+    # Email (SMPT)
+    smpt_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+
+    smtp_from_email: str = "noreply@example.com"
+    smtp_from_name: str = "FastAPI Default"
+
+    smtp_starttls: bool = True
+    smtp_ssl: bool = False
+
+    # Celery
+    celery_enabled: bool = False
+
+    celery_broker_url: str = "redis://redis:6379/0"
+    celery_result_backend: str = "redis://redis:6379/1"
+
+    celery_task_serializer: str = "json"
+    celery_result_serializer: str = "json"
+    celery_accept_content: list[str] = ["json"]
+
+    celery_timezone: str = "UTC"
 
 
 # Settings singleton

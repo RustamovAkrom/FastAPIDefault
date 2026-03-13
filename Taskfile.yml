@@ -2,7 +2,7 @@ version: "3"
 
 vars:
   RUNNER:
-    sh: 'echo {{ .RUNNER | default "uv run" }}'
+    sh: 'echo {{ .RUNNER | default "uv run --no-sync" }}'
   SOURCES: src tests
   SOURCES_ROOT: src
 
@@ -40,7 +40,7 @@ tasks:
     cmds:
       - docker compose up -d --wait postgres
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
-      - "{{.RUNNER}} uvicorn dev:app --reload"
+      - "{{.RUNNER}} uvicorn dev:app --reload --reload-dir src"
 
   prod:
     desc: Run production stack (build images + run)

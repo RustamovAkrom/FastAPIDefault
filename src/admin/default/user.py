@@ -16,7 +16,7 @@ from db.models.user import User, UserRole
 
 
 @register_admin
-class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg]
+class UserAdmin(BaseAdmin, model=User):  # type: ignore
     logger = configure_logger()
 
     # =====================
@@ -38,21 +38,29 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg]
         User.email,
         User.role,
         User.is_active,
+        User.is_verified,
+        User.last_login,
+        User.created_at,
     )
 
     column_searchable_list: ClassVar = (
         User.username,
         User.email,
+        User.first_name,
+        User.last_name,
     )
 
     column_sortable_list: ClassVar = (
         User.id,
         User.username,
         User.role,
+        User.created_at,
+        User.last_login,
     )
 
     column_filters: ClassVar = (
         BooleanFilter(User.is_active),
+        BooleanFilter(User.is_verified),
         AllUniqueStringValuesFilter(User.role),
     )
 
@@ -81,6 +89,20 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg]
 
     form_choices: ClassVar = {"role": [(role.value, role.name.title()) for role in UserRole]}
 
+    form_columns: ClassVar = (
+        User.username,
+        User.email,
+        User.password,
+        User.first_name,
+        User.last_name,
+        User.phone,
+        User.role,
+        User.is_active,
+        User.is_staff,
+        User.is_superuser,
+        User.is_verified,
+    )
+
     # =====================
     # META
     # =====================
@@ -89,10 +111,11 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg]
     name_plural: ClassVar[str] = "Users"
 
     icon: ClassVar[str] = "fa-solid fa-user"
+
     identity: ClassVar[str] = "user"
 
     category: ClassVar[str] = "Accounts"
-    category_icon: ClassVar[str] = "fa-solid fa-user"
+    category_icon: ClassVar[str] = "fa-solid fa-users"
 
     # =====================================================
     # ACCESS CONTROL
@@ -100,6 +123,7 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg]
 
     def is_accessible(self, request: Request) -> bool:
         role = get_role(request)
+
         return role in {UserRole.ADMIN, UserRole.SUPERADMIN}
 
     # =====================================================
@@ -117,11 +141,14 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg]
         actor_id = get_user_id(request)
 
         # normalize email
+
         email_raw = data.get("email")
+
         if isinstance(email_raw, str):
             data["email"] = email_raw.strip().lower()
 
         # normalize role
+
         new_role: UserRole | None = None
         role_raw = data.get("role")
 
@@ -155,6 +182,7 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg]
         else:
             if isinstance(raw_password, str) and raw_password:
                 data["password"] = hash_password(raw_password)
+
             else:
                 data.pop("password", None)
 
@@ -162,7 +190,11 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg]
     # DELETE VALIDATION
     # =====================================================
 
-    async def on_model_delete(self, model: User, request: Request) -> None:
+    async def on_model_delete(
+        self,
+        model: User,
+        request: Request,
+    ) -> None:
         actor_id = get_user_id(request)
         actor_role = get_role(request)
 

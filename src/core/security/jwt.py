@@ -63,7 +63,7 @@ def create_refresh_token(data: dict[str, Any]) -> str:
     """
     return _create_token(
         data=data,
-        secret_key=settings.jwt_secret_key,
-        expires_date=timedelta(minutes=settings.access_token_expire_minutes),
+        secret_key=settings.jwt_refresh_secret_key,
+        expires_date=timedelta(days=settings.refresh_token_expire_days),
         token_type=TokenType.REFRESH,
     )

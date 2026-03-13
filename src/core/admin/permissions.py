@@ -49,11 +49,11 @@ def can_delete_user(
     if actor_id == target_id:
         return False
 
-    # can't delete superadmin
-    if actor_role == UserRole.SUPERADMIN:
+    # nobody can delete superadmin account
+    if target_role == UserRole.SUPERADMIN:
         return False
 
-    # admin can't delte admin
+    # admin can't delete another admin
     if actor_role == UserRole.ADMIN and target_role == UserRole.ADMIN:
         return False
 

@@ -44,6 +44,7 @@ class AdminAuth(AuthenticationBackend):
                 {
                     "admin_user_id": user.id,
                     "role": user.role.value,
+                    "username": user.username,
                 }
             )
 
