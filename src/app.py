@@ -6,14 +6,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from api.router import api_router
-from core.admin.init_admin import init_admin
+from modules import load_routers
+from infrastructure.admin.init_admin import init_admin
 from core.exceptions.handlers import register_exception_handlers
 from core.lifespan import lifespan
 from core.logger import configure_logger
-from core.monitoring import router as monitoring_router
-from core.prometheus import MetricsMiddleware
-from core.sentry import init_sentry
+from core.observability.monitoring import router as monitoring_router
+from core.observability.prometheus import MetricsMiddleware
+from core.observability.sentry import init_sentry
 from core.settings import get_settings
 from middlewares import RequestIDMiddleware, SecurityHeadersMiddleware
 
@@ -25,6 +25,7 @@ def create_app() -> FastAPI:
     configure_logger()
 
     settings = get_settings()
+    api_router = load_routers()
 
     if settings.sentry_dsn:
         init_sentry()

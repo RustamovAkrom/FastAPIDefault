@@ -7,14 +7,14 @@ from sqlalchemy.future import Connection
 
 from core.settings import get_settings
 from db.meta import meta
-from db.models import load_all_models
+from modules import load_models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-
-load_all_models()
+# load models from each module
+load_models()
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
