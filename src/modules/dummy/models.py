@@ -11,6 +11,3 @@ class Dummy(Base):
     __table_args__ = {"extend_existing": True}
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(length=200))
-
-    def __str__(self):
-        return f"{self.id} - {self.name}"

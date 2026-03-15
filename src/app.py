@@ -6,8 +6,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from modules import load_routers
-from infrastructure.admin.init_admin import init_admin
 from core.exceptions.handlers import register_exception_handlers
 from core.lifespan import lifespan
 from core.logger import configure_logger
@@ -15,7 +13,9 @@ from core.observability.monitoring import router as monitoring_router
 from core.observability.prometheus import MetricsMiddleware
 from core.observability.sentry import init_sentry
 from core.settings import get_settings
+from infrastructure.admin.init_admin import init_admin
 from middlewares import RequestIDMiddleware, SecurityHeadersMiddleware
+from modules import load_routers
 
 
 def create_app() -> FastAPI:

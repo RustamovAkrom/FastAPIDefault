@@ -8,7 +8,6 @@ from pydantic import TypeAdapter
 from modules.dummy.crud import DummyCRUD
 from modules.dummy.schemas import Dummy, DummyCreate
 
-
 router = APIRouter(prefix="/dummy", tags=["dummy"])
 
 

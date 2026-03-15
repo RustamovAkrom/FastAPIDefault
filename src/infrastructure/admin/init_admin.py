@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from sqladmin import Admin
 
-from modules import load_admin
-from infrastructure.admin.auth import AdminAuth
-from infrastructure.admin.registry import get_admin_views
 from core.database import get_db_engine
 from core.settings import get_settings
+from infrastructure.admin.auth import AdminAuth
+from infrastructure.admin.registry import get_admin_views
+from modules import load_admin
 
 
 def init_admin(app: FastAPI) -> FastAPI:

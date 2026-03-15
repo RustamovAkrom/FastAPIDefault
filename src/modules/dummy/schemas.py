@@ -1,6 +1,4 @@
-from pydantic import Field
-
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 def _to_camel(name: str) -> str:
