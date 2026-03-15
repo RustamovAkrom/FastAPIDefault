@@ -7,7 +7,7 @@ from core.database import async_session
 from core.security import hash_password
 from core.settings import get_settings
 
-from db.models.user import User, UserRole
+from modules.users.models import User, UserRole
 
 
 def prompt(value: str, default: str | None = None) -> str:
