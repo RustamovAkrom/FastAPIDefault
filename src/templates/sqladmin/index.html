@@ -1,0 +1,80 @@
+{% extends "sqladmin/layout.html" %}
+
+{% block content %}
+  <div class="col-12">
+    <div class="card admin-dashboard-hero">
+      <div class="card-body p-4 p-lg-5">
+        <div class="row align-items-center g-4">
+          <div class="col-lg-8">
+            <p class="text-uppercase text-muted small mb-2">FastAPI Default</p>
+            <h3 class="mb-2">Welcome to your Admin Command Center</h3>
+            <p class="text-muted mb-4">
+              This panel gives you a centralized place to manage models, monitor operational health,
+              and control access policies with SQLAdmin.
+            </p>
+            <div class="d-flex flex-wrap gap-2">
+              <a class="btn btn-success" href="/admin/user/list">
+                <i class="fa-solid fa-users me-2"></i>
+                Open Users
+              </a>
+              <a class="btn btn-light" href="/docs" target="_blank" rel="noopener">
+                <i class="fa-solid fa-book me-2"></i>
+                API Docs
+              </a>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="admin-kpi-grid">
+              <div class="admin-kpi-card">
+                <div class="small text-muted">Environment</div>
+                <div class="fw-bold">Production-ready</div>
+              </div>
+              <div class="admin-kpi-card">
+                <div class="small text-muted">Security</div>
+                <div class="fw-bold">RBAC Enabled</div>
+              </div>
+              <div class="admin-kpi-card">
+                <div class="small text-muted">Background Jobs</div>
+                <div class="fw-bold">Celery Ready</div>
+              </div>
+              <div class="admin-kpi-card">
+                <div class="small text-muted">Observability</div>
+                <div class="fw-bold">Metrics Ready</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-8">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Getting Started</h3>
+      </div>
+      <div class="card-body">
+        <div class="admin-checklist">
+          <div class="admin-check-item"><i class="fa-solid fa-circle-check text-success me-2"></i> Create your first superadmin user</div>
+          <div class="admin-check-item"><i class="fa-solid fa-circle-check text-success me-2"></i> Configure SMTP for notifications</div>
+          <div class="admin-check-item"><i class="fa-solid fa-circle-check text-success me-2"></i> Enable monitoring stack (Prometheus/Grafana)</div>
+          <div class="admin-check-item"><i class="fa-solid fa-circle-check text-success me-2"></i> Add your business modules and admin views</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h3 class="card-title">Quick Links</h3>
+      </div>
+      <div class="card-body d-grid gap-2">
+        <a class="btn btn-outline-secondary text-start" href="/admin/profile"><i class="fa-solid fa-user me-2"></i> Profile</a>
+        <a class="btn btn-outline-secondary text-start" href="/admin/user/list"><i class="fa-solid fa-table me-2"></i> Model List</a>
+        <a class="btn btn-outline-secondary text-start" href="/healthcheck"><i class="fa-solid fa-heart-pulse me-2"></i> Healthcheck</a>
+        <a class="btn btn-outline-secondary text-start" href="/metrics" target="_blank" rel="noopener"><i class="fa-solid fa-chart-line me-2"></i> Metrics</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

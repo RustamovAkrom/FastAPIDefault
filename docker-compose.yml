@@ -157,32 +157,32 @@ services:
   # Comment this block if you don't need dashboards.
   # =========================================================
   # grafana:
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./deployments/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    depends_on:
-      - web
-    restart: always
-    networks:
-      - backend_network
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./deployments/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   depends_on:
+  #     - web
+  #   restart: always
+  #   networks:
+  #     - backend_network
 
-  grafana:
-    image: grafana/grafana
-    container_name: grafana
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./deployments/grafana/provisioning:/etc/grafana/provisioning
-      - ./deployments/grafana/dashboards:/etc/grafana/dashboards
+  # grafana:
+  #   image: grafana/grafana
+  #   container_name: grafana
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #     - ./deployments/grafana/provisioning:/etc/grafana/provisioning
+  #     - ./deployments/grafana/dashboards:/etc/grafana/dashboards
 
-    depends_on:
-      - prometheus
-      - loki
+  #   depends_on:
+  #     - prometheus
+  #     - loki
 
   #   networks:
   #     - backend_network
@@ -242,6 +242,37 @@ services:
   #     - loki
   #   restart: always
 
+  # loki:
+
+  #   image: grafana/loki:2.9.3
+  #   container_name: loki
+  #   ports:
+  #     - "3100:3100"
+  #   command: -config.file=/etc/loki/local-config.yaml
+  #   networks:
+  #     - backend_network
+  #   restart: always
+
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+
+  # promtail:
+  #   image: grafana/promtail:2.9.3
+  #   container_name: promtail
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - /var/lib/docker/containers:/var/lib/docker/containers:ro
+  #     - ./deployments/loki/promtail.yml:/etc/promtail/config.yml
+  #   command: -config.file=/etc/promtail/config.yml
+  #   networks:
+  #     - backend_network
+  #   depends_on:
+  #     - loki
+  #   restart: always  
+
 # =========================================================
   # Node Exporter
   # =========================================================
@@ -284,46 +315,12 @@ services:
   #     - postgres
   #   networks:
   #     - backend_network
-    networks:
-      - backend_network
-    restart: always
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
 
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  loki:
-
-    image: grafana/loki:2.9.3
-    container_name: loki
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - backend_network
-    restart: always
-
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  promtail:
-    image: grafana/promtail:2.9.3
-    container_name: promtail
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./deployments/loki/promtail.yml:/etc/promtail/config.yml
-    command: -config.file=/etc/promtail/config.yml
-    networks:
-      - backend_network
-    depends_on:
-      - loki
-    restart: always  
 #  pgbouncer:
 #    image: pgbouncer/pgbouncer:latest
 #    restart: always
@@ -349,99 +346,99 @@ services:
 #    networks:
 #      - backend_network
 
-#  redis:
-#    image: redis:7-alpine
-#    restart: always
-#    healthcheck:
-#      test: [ "CMD", "redis-cli", "ping" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#    networks:
-#      - backend_network
+  redis:
+    image: redis:7-alpine
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend_network
 
-#  rabbitmq:
-#    image: rabbitmq:management
-#    env_file:
-#      - .env
-#    restart: always
-#    environment:
-#      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-#      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
-#    ports:
-#      - ${RABBITMQ_PORT:-15672}:15672
-#      - ${AMQP_PORT:-5672}:5672
-#    volumes:
-#      - rabbitmq:/var/lib/rabbitmq
-#    healthcheck:
-#      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#    networks:
-#      - backend_network
+  # rabbitmq:
+  #   image: rabbitmq:management
+  #   env_file:
+  #     - .env
+  #   restart: always
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+  #     RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+  #   ports:
+  #     - ${RABBITMQ_PORT:-15672}:15672
+  #     - ${AMQP_PORT:-5672}:5672
+  #   volumes:
+  #     - rabbitmq:/var/lib/rabbitmq
+  #   healthcheck:
+  #     test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - backend_network
 
-#  celery_worker:
-#    build:
-#      context: .
-#      dockerfile: deployments/compose/backend/Dockerfile
-#    command: /start-celeryworker
-#    env_file:
-#      - .env
-#    restart: always
-#    volumes:
-#      - ./src:/app
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      redis:
-#        condition: service_healthy
-#      rabbitmq:
-#        condition: service_healthy
-#    networks:
-#      - backend_network
+  # celery_worker:
+  #   build:
+  #     context: .
+  #     dockerfile: deployments/compose/backend/Dockerfile
+  #   command: /start-celeryworker
+  #   env_file:
+  #     - .env
+  #   restart: always
+  #   volumes:
+  #     - ./src:/app/src
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     # rabbitmq:
+  #     #   condition: service_healthy
+  #   networks:
+  #     - backend_network
 
-#  celery_beat:
-#    build:
-#      context: .
-#      dockerfile: deployments/compose/backend/Dockerfile
-#    command: /start-celerybeat
-#    env_file:
-#      - .env
-#    restart: always
-#    volumes:
-#      - ./src:/app
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      redis:
-#        condition: service_healthy
-#      rabbitmq:
-#        condition: service_healthy
-#    networks:
-#      - backend_network
+  # celery_beat:
+  #   build:
+  #     context: .
+  #     dockerfile: deployments/compose/backend/Dockerfile
+  #   command: /start-celerybeat
+  #   env_file:
+  #     - .env
+  #   restart: always
+  #   volumes:
+  #     - ./src:/app/src
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     # rabbitmq:
+  #     #   condition: service_healthy
+  #   networks:
+  #     - backend_network
 
-#  celery_flower:
-#    build:
-#      context: .
-#      dockerfile: deployments/compose/backend/Dockerfile
-#    command: /start-flower
-#    env_file:
-#      - .env
-#    restart: always
-#    volumes:
-#      - ./src:/app
-#    ports:
-#      - ${CELERY_FLOWER:-5555}:5555
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      redis:
-#        condition: service_healthy
-#      rabbitmq:
-#        condition: service_healthy
-#    networks:
-#      - backend_network
+  # celery_flower:
+  #   build:
+  #     context: .
+  #     dockerfile: deployments/compose/backend/Dockerfile
+  #   command: /start-flower
+  #   env_file:
+  #     - .env
+  #   restart: always
+  #   volumes:
+  #     - ./src:/app/src
+  #   ports:
+  #     - ${CELERY_FLOWER:-5555}:5555
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     # rabbitmq:
+  #     #   condition: service_healthy
+  #   networks:
+  #     - backend_network
 
 volumes:
   pg_data:
@@ -449,8 +446,10 @@ volumes:
   grafana_data:
 #  pgbouncer_data:
 #    driver: local
-#  rabbitmq:
-#    driver: local
+  # rabbitmq:
+  #   driver: local
+  # redis_data:
+  #   driver: local
 
 networks:
   backend_network:

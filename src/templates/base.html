@@ -1,82 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="FastAPI Default - Production-ready backend template">
-
-<title>FastAPI Default</title>
-
-<link rel="stylesheet" href="/static/css/main.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="FastAPI Default - Production-ready backend template">
+  <title>FastAPI Default</title>
+  <link rel="stylesheet" href="/static/css/main.css">
 </head>
 
 <body>
+  <header class="header">
+    <div class="header__container">
+      <a href="{{ base_url }}" class="logo">
+        <img src="/static/images/fastapi.svg" alt="FastAPI logo" class="logo__image">
+        <span class="logo__text">
+          FastAPI <span class="logo__accent">Default</span>
+        </span>
+      </a>
 
-<header class="header">
+      <button class="menu-toggle" id="menuToggle">☰</button>
 
-<div class="header__container">
+      <nav class="nav" id="navMenu">
+        <a href="{{ base_url }}/docs" class="nav__link">Docs</a>
+        <a href="{{ base_url }}/openapi.json" class="nav__link">OpenAPI</a>
+        <a href="{{ base_url }}/healthcheck" class="nav__link">Health</a>
+        <a href="{{ base_url }}/metrics" class="nav__link">Metrics</a>
+        <a href="{{ base_url }}/admin" class="nav__link">Admin</a>
+      </nav>
+    </div>
+  </header>
 
-<a href="{{ base_url }}" class="logo">
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
 
-<img src="/static/images/fastapi.svg" alt="FastAPI logo" class="logo__image">
+  <footer class="footer">
+    <div class="footer__container">
+      <p class="footer__text">
+        FastAPI Default — <span class="year"></span>
+      </p>
 
-<span class="logo__text">
-FastAPI <span class="logo__accent">Default</span>
-</span>
+      <div class="footer__links">
+        <a href="https://fastapi.tiangolo.com" class="footer__link">FastAPI</a>
+        <a href="https://docs.pydantic.dev" class="footer__link">Pydantic</a>
+        <a href="https://www.sqlalchemy.org" class="footer__link">SQLAlchemy</a>
+      </div>
+    </div>
+  </footer>
 
-</a>
-
-
-<button class="menu-toggle" id="menuToggle">
-☰
-</button>
-
-<nav class="nav" id="navMenu">
-
-<a href="{{ base_url }}/docs" class="nav__link">Docs</a>
-<a href="{{ base_url }}/redoc" class="nav__link">Reference</a>
-<a href="{{ base_url }}/openapi.json" class="nav__link">Schema</a>
-<a href="{{ base_url }}/metrics" class="nav__link">Prometheus Metrics</a>
-<a href="http://{{ hostname }}:3000" class="nav__link">Grafana</a>
-<a href="http://{{ hostname }}:3100" class="nav__link">Loki</a>
-<a href="{{ base_url }}/admin" class="nav__link">Admin Panel</a>
-<a href="https://sentry.io" class="nav__link">Sentry</a>
-
-</nav>
-
-</div>
-
-</header>
-
-
-<main class="main">
-{% block content %}{% endblock %}
-</main>
-
-
-<footer class="footer">
-
-<div class="footer__container">
-
-<p class="footer__text">
-FastAPI Default — <span class="year"></span>
-</p>
-
-<div class="footer__links">
-
-<a href="https://github.com" class="footer__link">GitHub</a>
-<a href="https://fastapi.tiangolo.com" class="footer__link">FastAPI</a>
-<a href="https://python.org" class="footer__link">Python</a>
-
-</div>
-
-</div>
-
-</footer>
-
-<script src="/static/js/main.js"></script>
+  <script src="/static/js/main.js"></script>
 
 </body>
 </html>
