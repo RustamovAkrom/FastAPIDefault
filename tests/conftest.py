@@ -15,14 +15,14 @@ from app import create_app
 from core.settings import get_settings
 from db.base import Base
 from db.dependencies import get_db_session
-from modules import load_models
+from modules import load_modules
 
 
 @pytest.fixture(scope="session")
 async def _engine() -> AsyncGenerator[AsyncEngine, None]:
     settings = get_settings()
 
-    load_models()
+    load_modules()
 
     engine = create_async_engine(str(settings.postgres_url))
 

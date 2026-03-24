@@ -1,80 +1,148 @@
 {% extends "sqladmin/layout.html" %}
 
 {% block content %}
-  <div class="col-12">
-    <div class="card admin-dashboard-hero">
-      <div class="card-body p-4 p-lg-5">
-        <div class="row align-items-center g-4">
-          <div class="col-lg-8">
-            <p class="text-uppercase text-muted small mb-2">FastAPI Default</p>
-            <h3 class="mb-2">Welcome to your Admin Command Center</h3>
-            <p class="text-muted mb-4">
-              This panel gives you a centralized place to manage models, monitor operational health,
-              and control access policies with SQLAdmin.
-            </p>
-            <div class="d-flex flex-wrap gap-2">
-              <a class="btn btn-success" href="/admin/user/list">
-                <i class="fa-solid fa-users me-2"></i>
-                Open Users
-              </a>
-              <a class="btn btn-light" href="/docs" target="_blank" rel="noopener">
-                <i class="fa-solid fa-book me-2"></i>
-                API Docs
-              </a>
-            </div>
+
+<!-- ================= HERO ================= -->
+<div class="col-12">
+  <div class="card admin-dashboard-hero border-0 shadow-sm">
+    <div class="card-body p-4 p-lg-5">
+
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+        <div>
+          <p class="text-uppercase text-muted small mb-1">
+            {{ request.session.get("username", "Admin") }}
+          </p>
+
+          <h3 class="mb-1 fw-semibold">Admin Control Center</h3>
+
+          <p class="text-muted mb-0">
+            Centralized monitoring, management, and system control.
+          </p>
+        </div>
+
+        <div class="d-flex gap-2">
+          <a class="btn btn-success" href="/admin/user/list">
+            <i class="fa-solid fa-users me-2"></i>Users
+          </a>
+
+          <a class="btn btn-light" href="/docs" target="_blank">
+            <i class="fa-solid fa-book me-2"></i>Docs
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= KPI ================= -->
+<div class="col-12">
+  <div class="row g-3">
+
+    {% macro kpi(title, value, icon) %}
+    <div class="col-6 col-md-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <div class="small text-muted">{{ title }}</div>
+            <div class="fw-bold fs-5">{{ value }}</div>
           </div>
-          <div class="col-lg-4">
-            <div class="admin-kpi-grid">
-              <div class="admin-kpi-card">
-                <div class="small text-muted">Environment</div>
-                <div class="fw-bold">Production-ready</div>
-              </div>
-              <div class="admin-kpi-card">
-                <div class="small text-muted">Security</div>
-                <div class="fw-bold">RBAC Enabled</div>
-              </div>
-              <div class="admin-kpi-card">
-                <div class="small text-muted">Background Jobs</div>
-                <div class="fw-bold">Celery Ready</div>
-              </div>
-              <div class="admin-kpi-card">
-                <div class="small text-muted">Observability</div>
-                <div class="fw-bold">Metrics Ready</div>
-              </div>
-            </div>
-          </div>
+          <i class="fa-solid {{ icon }} text-muted"></i>
         </div>
       </div>
     </div>
-  </div>
+    {% endmacro %}
 
-  <div class="col-12 col-lg-8">
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">Getting Started</h3>
-      </div>
-      <div class="card-body">
-        <div class="admin-checklist">
-          <div class="admin-check-item"><i class="fa-solid fa-circle-check text-success me-2"></i> Create your first superadmin user</div>
-          <div class="admin-check-item"><i class="fa-solid fa-circle-check text-success me-2"></i> Configure SMTP for notifications</div>
-          <div class="admin-check-item"><i class="fa-solid fa-circle-check text-success me-2"></i> Enable monitoring stack (Prometheus/Grafana)</div>
-          <div class="admin-check-item"><i class="fa-solid fa-circle-check text-success me-2"></i> Add your business modules and admin views</div>
+    {{ kpi("Environment", settings.env|upper, "fa-server") }}
+    {{ kpi("Modules", stats().modules, "fa-cubes") }}
+    {{ kpi("Users", stats().users, "fa-users") }}
+    {{ kpi("Tasks", stats().tasks, "fa-list-check") }}
+
+  </div>
+</div>
+
+<!-- ================= SYSTEM STATUS ================= -->
+<div class="col-12 col-lg-6">
+  <div class="card border-0 shadow-sm h-100">
+    <div class="card-header bg-transparent border-0">
+      <h5 class="mb-0">System Status</h5>
+    </div>
+
+    <div class="card-body">
+
+      {% macro status(label, ok, icon, ok_text="OK", fail_text="DOWN") %}
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <i class="fa-solid {{ icon }} me-2"></i>
+          {{ label }}
         </div>
+        <span class="badge rounded-pill px-3 py-2 bg-{% if ok %}success{% else %}danger{% endif %}">
+          {% if ok %}{{ ok_text }}{% else %}{{ fail_text }}{% endif %}
+        </span>
       </div>
-    </div>
-  </div>
+      {% endmacro %}
 
-  <div class="col-12 col-lg-4">
-    <div class="card h-100">
-      <div class="card-header">
-        <h3 class="card-title">Quick Links</h3>
-      </div>
-      <div class="card-body d-grid gap-2">
-        <a class="btn btn-outline-secondary text-start" href="/admin/profile"><i class="fa-solid fa-user me-2"></i> Profile</a>
-        <a class="btn btn-outline-secondary text-start" href="/admin/user/list"><i class="fa-solid fa-table me-2"></i> Model List</a>
-        <a class="btn btn-outline-secondary text-start" href="/healthcheck"><i class="fa-solid fa-heart-pulse me-2"></i> Healthcheck</a>
-        <a class="btn btn-outline-secondary text-start" href="/metrics" target="_blank" rel="noopener"><i class="fa-solid fa-chart-line me-2"></i> Metrics</a>
-      </div>
+      {{ status("Database", health().db, "fa-database") }}
+      {{ status("Celery", settings.celery_enabled, "fa-bolt", "ACTIVE", "OFF") }}
+      {{ status("Monitoring", settings.prometheus_enabled, "fa-chart-line", "ON", "OFF") }}
+
     </div>
   </div>
+</div>
+
+<!-- ================= QUICK ACTIONS ================= -->
+<div class="col-12 col-lg-6">
+  <div class="card border-0 shadow-sm h-100">
+    <div class="card-header bg-transparent border-0">
+      <h5 class="mb-0">Quick Actions</h5>
+    </div>
+
+    <div class="card-body d-grid gap-2">
+
+      <a class="btn btn-outline-secondary text-start" href="/admin/profile">
+        <i class="fa-solid fa-user me-2"></i>Profile
+      </a>
+
+      <a class="btn btn-outline-secondary text-start" href="/admin/user/list">
+        <i class="fa-solid fa-table me-2"></i>Users
+      </a>
+
+      <a class="btn btn-outline-secondary text-start" href="/metrics" target="_blank">
+        <i class="fa-solid fa-chart-line me-2"></i>Metrics
+      </a>
+
+      <a class="btn btn-outline-secondary text-start" href="/healthcheck">
+        <i class="fa-solid fa-heart-pulse me-2"></i>Healthcheck
+      </a>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= CHECKLIST ================= -->
+<div class="col-12">
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-transparent border-0">
+      <h5 class="mb-0">System Checklist</h5>
+    </div>
+
+    <div class="card-body">
+
+      {% macro check(text, ok=True) %}
+      <div class="d-flex align-items-center mb-2">
+        <i class="fa-solid fa-circle-check me-2 text-{% if ok %}success{% else %}secondary{% endif %}"></i>
+        {{ text }}
+      </div>
+      {% endmacro %}
+
+      {{ check("Admin user configured") }}
+      {{ check("Database connected", health().db) }}
+      {{ check("Modules loaded", stats().modules > 0) }}
+      {{ check("Background jobs configured", settings.celery_enabled) }}
+
+    </div>
+  </div>
+</div>
 {% endblock %}

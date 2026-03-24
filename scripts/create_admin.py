@@ -6,7 +6,6 @@ from sqlalchemy import select
 from core.database import async_session
 from core.security import hash_password
 from core.settings import get_settings
-
 from modules.users.models import User, UserRole
 
 

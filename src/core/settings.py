@@ -10,7 +10,6 @@ ENV_FILE_PATH = (
     {
         "local": ".env.local",
         "test": ".env.test",
-        "ci": ".env.ci",
         "prod": ".env",
     }
 ).get(os.getenv("ENV", "local"), ".env")
@@ -54,7 +53,8 @@ class Settings(BaseSettings):
     app_name: str = "fastapidefault"
     app_version: str = "1.0.0"
     api_v1_str: str = "/api/v1"
-
+    app_host: str = "127.0.0.1"
+    app_port: int = 8000
     env: Literal["local", "test", "ci", "prod"] = "local"
 
     debug: bool = True
@@ -114,8 +114,14 @@ class Settings(BaseSettings):
     log_to_file: bool = False
     log_file_path: str = "logs/app.log"
 
+    # Rate limiting
+    rate_limit_enabled: bool = False
+    rate_limit_default: str = "100/minute"
+    rate_limit_storage_url: str = "memory://"
+
     # Security
     allowed_hosts: list[str] = ["*"]
+    cors_origins: list[str] = ["http://localhost:3000"]
 
     # Build helpers
     @property

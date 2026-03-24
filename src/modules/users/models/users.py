@@ -18,7 +18,6 @@ from db.base import Base, IDMixin, TimestampMixin
 class UserRole(StrEnum):
     SUPERADMIN = "superadmin"
     ADMIN = "admin"
-    MODERATOR = "moderator"
     USER = "user"
 
 

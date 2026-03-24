@@ -6,11 +6,20 @@ Run FastAPI app with uvicorn.
 
 import uvicorn
 
-if __name__ == "__main__":
+from core.settings import get_settings
+
+
+def main() -> None:
+    settings = get_settings()
+
     uvicorn.run(
         "app:create_app",
         app_dir="src",
-        host="0.0.0.0",  # noqa: S104
-        port=8000,
+        host=settings.app_host,
+        port=settings.app_port,
         reload=True,
     )
+
+
+if __name__ == "__main__":
+    main()

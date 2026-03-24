@@ -85,8 +85,6 @@ class UserAdmin(BaseAdmin, model=User):  # type: ignore[call-arg, misc]
     name_plural = "Users"
     icon = "fa-solid fa-user"
     identity = "user"
-    category = "Accounts"
-    category_icon = "fa-solid fa-user"
 
     # =========================================================
     # RBAC + VALIDATION LOGIC

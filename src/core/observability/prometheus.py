@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import os
-import time
-from collections.abc import Awaitable, Callable
 
-from fastapi import Request, Response
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
@@ -15,7 +12,9 @@ from prometheus_client import (
     generate_latest,
     multiprocess,
 )
-from starlette.middleware.base import BaseHTTPMiddleware
+from prometheus_client import (
+    REGISTRY as DEFAULT_REGISTRY,
+)
 from starlette.responses import Response as StarletteResponse
 
 from core.settings import get_settings
@@ -31,7 +30,7 @@ def _build_registry() -> CollectorRegistry:
         multiprocess.MultiProcessCollector(registry)  # type: ignore[no-untyped-call]
         return registry
 
-    return CollectorRegistry()
+    return DEFAULT_REGISTRY
 
 
 REGISTRY = _build_registry()
@@ -99,84 +98,3 @@ APP_INFO.info(
 async def metrics_endpoint() -> StarletteResponse:
     data = generate_latest(REGISTRY)
     return StarletteResponse(data, media_type=CONTENT_TYPE_LATEST)
-
-
-# MIDDLEWARE
-class MetricsMiddleware(BaseHTTPMiddleware):
-    async def dispatch(
-        self,
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]],
-    ) -> Response:
-        # не трогаем metrics endpoint
-        if request.url.path.startswith("/metrics"):
-            return await call_next(request)
-
-        app_label = APP_NAME
-        method = request.method
-
-        route = request.scope.get("route")
-        endpoint = route.path if route else request.url.path
-
-        start_time = time.perf_counter()
-        IN_PROGRESS.labels(app=app_label).inc()
-
-        try:
-            response = await call_next(request)
-            status_code = response.status_code
-            status = str(status_code)
-
-        except Exception:
-            EXCEPTIONS_TOTAL.labels(
-                app=app_label,
-                endpoint=endpoint,
-            ).inc()
-
-            REQUEST_ERRORS.labels(
-                app=app_label,
-                method=method,
-                endpoint=endpoint,
-                status="500",
-            ).inc()
-
-            IN_PROGRESS.labels(app=app_label).dec()
-            raise
-
-        duration = time.perf_counter() - start_time
-
-        # total
-        REQUEST_TOTAL.labels(
-            app=app_label,
-            method=method,
-            endpoint=endpoint,
-            status=status,
-        ).inc()
-
-        # histogram
-        REQUEST_DURATION.labels(
-            app=app_label,
-            method=method,
-            endpoint=endpoint,
-        ).observe(duration)
-
-        # status class (2xx / 4xx / 5xx)
-        status_class = f"{status_code // 100}xx"
-        REQUEST_STATUS_CLASS.labels(
-            app=app_label,
-            method=method,
-            endpoint=endpoint,
-            status_class=status_class,
-        ).inc()
-
-        # errors
-        if status_code >= 400:
-            REQUEST_ERRORS.labels(
-                app=app_label,
-                method=method,
-                endpoint=endpoint,
-                status=status,
-            ).inc()
-
-        IN_PROGRESS.labels(app=app_label).dec()
-
-        return response
