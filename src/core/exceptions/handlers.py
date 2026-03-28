@@ -7,13 +7,12 @@ from core.logger import configure_logger
 
 from .base import APIException
 
-logger = configure_logger()
-
 
 def register_exception_handlers(app: FastAPI) -> None:
     """
     Register global exception handlers.
     """
+    logger = configure_logger()
 
     @app.exception_handler(APIException)
     async def api_exception_handler(

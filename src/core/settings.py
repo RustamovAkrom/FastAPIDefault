@@ -10,7 +10,6 @@ ENV_FILE_PATH = (
     {
         "local": ".env.local",
         "test": ".env.test",
-        "ci": ".env.ci",
         "prod": ".env",
     }
 ).get(os.getenv("ENV", "local"), ".env")
@@ -53,8 +52,10 @@ class Settings(BaseSettings):
     app_title: str = "FastAPI Template Project"
     app_name: str = "fastapidefault"
     app_version: str = "1.0.0"
+    app_description: str = "A FastAPI boilerplate with Docker, PostgreSQL, Celery, Redis, and more."
     api_v1_str: str = "/api/v1"
-
+    app_host: str = "127.0.0.1"
+    app_port: int = 8000
     env: Literal["local", "test", "ci", "prod"] = "local"
 
     debug: bool = True
@@ -86,7 +87,7 @@ class Settings(BaseSettings):
 
     # Admin panel settings
     admin_enabled: bool = debug
-    admin_user: str | None = None
+    admin_username: str | None = None
     admin_password: str | None = None
     admin_path: str = "/admin"
 
@@ -110,12 +111,19 @@ class Settings(BaseSettings):
 
     # Logging
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    log_format: str = "[%(asctime)s] %(levelname)s in %(module)s: %(message)s"
     log_json: bool = False
     log_to_file: bool = False
     log_file_path: str = "logs/app.log"
 
+    # Rate limiting
+    rate_limit_enabled: bool = False
+    rate_limit_default: str = "100/minute"
+    rate_limit_storage_url: str = "memory://"
+
     # Security
     allowed_hosts: list[str] = ["*"]
+    cors_origins: list[str] = ["http://localhost:3000"]
 
     # Build helpers
     @property

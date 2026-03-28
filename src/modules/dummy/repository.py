@@ -6,7 +6,7 @@ from db.dependencies import get_db_session
 from modules.dummy.models import Dummy
 
 
-class DummyCRUD:
+class DummyRepository:
     """Class for accessing dummy table."""
 
     def __init__(self, session: AsyncSession = Depends(get_db_session)):

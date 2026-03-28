@@ -1,75 +1,37 @@
 from fastapi import Request
 from sqladmin.authentication import AuthenticationBackend
-from sqlalchemy import select
 from starlette.responses import RedirectResponse, Response
 
-from core.database import async_session
-from core.security import verify_password
 from core.settings import get_settings
-from modules.users.models import User, UserRole
 
 
-class AdminAuth(AuthenticationBackend):
+class SimpleAdminAuth(AuthenticationBackend):
     def __init__(self) -> None:
         settings = get_settings()
         super().__init__(secret_key=settings.secret_key)
 
+        self.username = settings.admin_username
+        self.password = settings.admin_password
+
     async def login(self, request: Request) -> bool:
         form = await request.form()
 
-        username_raw: object | None = form.get("username")
-        password_raw: object | None = form.get("password")
+        username = form.get("username")
+        password = form.get("password")
 
-        if not isinstance(username_raw, str):
+        if not isinstance(username, str) or not isinstance(password, str):
             return False
 
-        if not isinstance(password_raw, str):
-            return False
+        if username == self.username and password == self.password:
+            request.session.clear()
+            request.session["admin"] = True
+            return True
 
-        async with async_session() as session:
-            result = await session.execute(select(User).where(User.username == username_raw))
-
-            user: User | None = result.scalar_one_or_none()
-
-            if user is None:
-                return False
-
-            if not user.is_active:
-                return False
-
-            if not verify_password(password_raw, user.password):
-                return False
-
-            request.session.update(
-                {
-                    "admin_user_id": user.id,
-                    "role": user.role.value,
-                    "username": user.username,
-                }
-            )
-
-        return True
+        return False
 
     async def logout(self, request: Request) -> bool | Response:
         request.session.clear()
-
-        return RedirectResponse(
-            url=request.url_for("admin:login"),
-            status_code=302,
-        )
+        return RedirectResponse(url=request.url_for("admin:login"), status_code=302)
 
     async def authenticate(self, request: Request) -> bool | Response:
-        role_raw: object | None = request.session.get("role")
-
-        if not isinstance(role_raw, str):
-            return False
-
-        try:
-            role: UserRole = UserRole(role_raw)
-        except ValueError:
-            return False
-
-        if role not in {UserRole.ADMIN, UserRole.SUPERADMIN}:
-            return False
-
-        return True
+        return request.session.get("admin", False)

@@ -1,7 +1,10 @@
 from celery import Celery
 
+from core.logger import configure_logger
 from core.settings import get_settings
+from modules import iter_modules
 
+logger = configure_logger()
 settings = get_settings()
 
 celery_app = Celery(
@@ -18,4 +21,29 @@ celery_app.conf.update(
     enable_utc=True,
 )
 
-# celery_app.autodiscover_tasks(["tasks"])
+
+def autodiscover_module_tasks() -> None:
+    """
+    Discover Celery tasks inside modules automatically.
+
+    Looks for:
+        modules.<module>.tasks
+    """
+
+    task_modules: list[str] = []
+
+    for module_name in iter_modules():
+        module_path = f"modules.{module_name}.tasks"
+        task_modules.append(module_path)
+
+    if not task_modules:
+        logger.debug("No module tasks discovered")
+        return
+
+    logger.info("Registering celery tasks", modules=task_modules)
+
+    celery_app.autodiscover_tasks(task_modules)
+
+
+# Run autodiscovery on import
+autodiscover_module_tasks()

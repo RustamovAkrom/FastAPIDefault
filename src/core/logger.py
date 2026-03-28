@@ -11,23 +11,28 @@ from core.settings import get_settings
 
 def configure_logger() -> loguru.Logger:
     """
-    Configure the logger for the application.
+    Production-safe logger configuration.
+
+    - stdout logging (default, Docker-friendly)
+    - optional file logging via LOG_PATH
+    - no filesystem crashes
     """
+
     settings = get_settings()
 
-    # Remove the default logger
+    # remove default handlers
     logger.remove()
 
-    # Log level
     level = "DEBUG" if settings.debug else "INFO"
 
-    # Console logger
+    # STDOUT (MAIN)
     logger.add(
         sys.stdout,
         level=level,
         colorize=settings.debug,
         backtrace=settings.debug,
         diagnose=settings.debug,
+        enqueue=True,  # important for async environments
         format=(
             "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
             "<level>{level}</level> | "
@@ -36,30 +41,38 @@ def configure_logger() -> loguru.Logger:
         ),
     )
 
-    # File logger
-    log_dir = Path("logs")
-    log_dir.mkdir(exist_ok=True)
+    # OPTIONAL FILE LOGGING
+    log_path: str | None = getattr(settings, "LOG_PATH", None)
 
-    # general logs
-    logger.add(
-        log_dir / "app.log",
-        rotation="10 MB",
-        retention="10 days",
-        enqueue=True,
-        serialize=not settings.debug,  # JSON in prod
-    )
+    if log_path:
+        try:
+            log_dir = Path(log_path)
+            log_dir.mkdir(parents=True, exist_ok=True)
 
-    # error logs only
-    logger.add(
-        log_dir / "errors.log",
-        level="ERROR",
-        rotation="5 MB",
-        retention="30 days",
-        compression="zip",
-        enqueue=True,
-        backtrace=True,
-        diagnose=True,
-        serialize=True,
-    )
+            # general logs
+            logger.add(
+                log_dir / "app.log",
+                rotation="10 MB",
+                retention="10 days",
+                enqueue=True,
+                serialize=not settings.debug,
+            )
 
-    return loguru.logger
+            # error logs
+            logger.add(
+                log_dir / "errors.log",
+                level="ERROR",
+                rotation="5 MB",
+                retention="30 days",
+                compression="zip",
+                enqueue=True,
+                backtrace=True,
+                diagnose=True,
+                serialize=True,
+            )
+
+        except OSError:
+            # fallback: ignore file logging in read-only FS
+            logger.warning("File logging disabled (read-only filesystem)")
+
+    return logger

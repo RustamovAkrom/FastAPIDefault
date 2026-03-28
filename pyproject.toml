@@ -64,6 +64,11 @@ dependencies = [
     "redis>=6.4.0",
     "amqp>=5.3.1",
     "kombu>=5.6.2",
+    "aiohttp>=3.13.3",
+    "slowapi>=0.1.9",
+    "bandit>=1.9.4",
+    "wtforms>=3.1.2",
+    "requests>=2.33.0",
 ]
 
 [project.urls]

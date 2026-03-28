@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from fastapi.param_functions import Depends
 from pydantic import TypeAdapter
 
-from modules.dummy.crud import DummyCRUD
+from modules.dummy.repository import DummyRepository
 from modules.dummy.schemas import Dummy, DummyCreate
 
 router = APIRouter(prefix="/dummy", tags=["dummy"])
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/dummy", tags=["dummy"])
 async def get_dummy_models(
     limit: Annotated[int, Query(description="Размер страницы")] = 10,
     page: Annotated[int, Query(description="Индекс страницы")] = 0,
-    dummy_crud: DummyCRUD = Depends(),
+    dummy_crud: DummyRepository = Depends(),
 ) -> list[Dummy]:
     """
     Получить список объектов из базы данных.
@@ -28,7 +28,7 @@ async def get_dummy_models(
 @router.post("/", summary="Создать новый объект", status_code=HTTPStatus.CREATED)
 async def create_dummy_model(
     new_dummy_object: DummyCreate,
-    dummy_crud: DummyCRUD = Depends(),
+    dummy_crud: DummyRepository = Depends(),
 ) -> None:
     """
     Создать новый объект в базе данных.

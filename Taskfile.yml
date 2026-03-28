@@ -11,57 +11,62 @@ tasks:
     cmd: task --list
 
   # =========================================================
+  # DATABASE
+  # =========================================================
+  db-up:
+    cmds:
+      - docker compose up -d --wait postgres
+
+  db-revision:
+    desc: Generate new migration
+    cmds:
+      - task: db-up
+      - "{{.RUNNER}} alembic -c src/alembic.ini revision --autogenerate -m '{{.MSG}}'"
+
+  db-migrate:
+    desc: Apply database migrations
+    cmds:
+      - task: db-up
+      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+
+  # =========================================================
   # DEVELOPMENT & RUNNING
   # =========================================================
 
   init:
-    desc: Initialize project (install deps + setup database)
+    desc: Initialize project
     env:
       ENV: local
     cmds:
       - uv sync
-      - docker compose up -d --wait postgres
-      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
-      - docker compose down
-
-  run:
-    desc: Run application locally (FastAPI dev mode)
-    env:
-      ENV: local
-    cmds:
-      - docker compose up -d --wait postgres || true
-      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
-      - "{{.RUNNER}} fastapi dev src/dev.py"
+      - task: db-up
+      - task: db-migrate
 
   dev:
-    desc: Run backend locally (Uvicorn reload mode)
+    desc: Run backend locally (dev mode)
     env:
       ENV: local
     cmds:
-      - docker compose up -d --wait postgres
-      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
-      - "{{.RUNNER}} uvicorn dev:app --reload --reload-dir src"
+      - task: db-up
+      - task: db-migrate
+      - "{{.RUNNER}} uvicorn src.dev:app --reload --reload-dir src"
 
   prod:
-    desc: Run production stack (build images + run)
+    desc: Run production stack
     cmds:
       - docker compose up -d --build
-      - docker compose up
+      - docker compose ps
 
   stack:
-    desc: Run full stack (DB + Monitoring + Migrations)
+    desc: Run full stack (safe)
     cmds:
-      - docker compose up -d --wait postgres
-      - task: obs
-      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+      - task: prod
+      - task: obs || true
+      - task: db-migrate
 
   # =========================================================
   # DOCKER & INFRASTRUCTURE
   # =========================================================
-
-  up:
-    desc: Start database container
-    cmd: docker compose up -d --wait postgres
 
   down:
     desc: Stop all containers
@@ -70,12 +75,11 @@ tasks:
   restart:
     desc: Restart infrastructure
     cmds:
-      - docker compose down
-      - docker compose up -d --build
+      - docker compose up -d --build --force-recreate
 
   logs:
     desc: Show logs (all services)
-    cmd: docker compose logs -f
+    cmd: docker compose logs -f --tail=100
 
   logs-web:
     desc: Show logs (backend only)
@@ -89,40 +93,27 @@ tasks:
     desc: Check infrastructure status
     cmds:
       - docker compose ps
+      - docker compose top
       - docker compose logs --tail=50 web
       - docker compose logs --tail=50 postgres
 
-  # =========================================================
-  # DATABASE
-  # =========================================================
-
-  db-revision:
-    desc: Generate new migration
-    cmds:
-      - docker compose up -d --wait postgres
-      - "{{.RUNNER}} alembic -c src/alembic.ini revision --autogenerate -m '{{.MSG}}'"
-      
-  db-migrate:
-    desc: Apply database migrations
-    cmds:
-      - docker compose up -d --wait postgres
-      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
-
   db-reset:
-    desc: Reset database (DROP ALL DATA)
+    desc: Reset database (ONLY LOCAL!)
+    env:
+      ENV: local
     cmds:
       - docker compose down -v
-      - docker compose up -d --wait postgres
+      - task: db-up
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
 
   db-shell:
-    desc: Open postgres shell
-    cmd: docker compose exec postgres psql -U ${POSTGRES_USER} ${POSTGRES_DB}
+    cmd: docker compose exec postgres sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB'
 
   admin-create:
     desc: Create superadmin user
     cmds:
-      - docker compose up -d --wait postgres
+      - task: db-up
+      - task: db-migrate
       - "{{.RUNNER}} python -m scripts.create_admin"
 
   # =========================================================
@@ -130,12 +121,12 @@ tasks:
   # =========================================================
 
   obs:
-    desc: Start monitoring stack (Prometheus, Grafana, Loki)
-    cmd: docker compose up -d prometheus grafana loki promtail node-exporter postgres-exporter
+    desc: Start monitoring stack (optional)
+    cmd: docker compose up -d prometheus grafana loki promtail node-exporter postgres-exporter || true
 
   obs-down:
     desc: Stop monitoring stack
-    cmd: docker compose stop prometheus grafana loki promtail node-exporter postgres-exporter
+    cmd: docker compose stop prometheus grafana loki promtail node-exporter postgres-exporter || true
 
   # =========================================================
   # CODE QUALITY & TESTING
@@ -160,12 +151,17 @@ tasks:
     desc: Type checking (mypy)
     cmd: "{{.RUNNER}} mypy src tests"
 
+  test-setup:
+    cmds:
+      - docker compose down -v postgres-test || true
+      - docker compose up -d --wait postgres-test
+
   test:
     desc: Run unit tests
     env:
       ENV: test
     cmds:
-      - docker compose up -d --wait postgres-test
+      - task: test-setup
       - ENV=test {{.RUNNER}} pytest -vv
 
   test-cov:
@@ -173,15 +169,9 @@ tasks:
     env:
       ENV: test
     cmds:
-      - docker compose up -d --wait postgres-test
+      - task: test-setup
       - "{{.RUNNER}} coverage run -m pytest -vv"
-      - "{{.RUNNER}} coverage report -m"
-
-  test-ci:
-    desc: Run tests (CI mode)
-    env:
-      ENV: ci
-    cmd: "{{.RUNNER}} pytest"
+      - "{{.RUNNER}} coverage report -m --fail-under=75"
 
   # =========================================================
   # CI / COMPLETE CHECKS
@@ -189,11 +179,33 @@ tasks:
   pre-commit:
     desc: Run pre-commit
     cmd: uvx pre-commit run
-    
+
+  security:
+    desc: Security scan (bandit)
+    cmd: "{{.RUNNER}} bandit -r src -q"
+
+  imports:
+    desc: Check import sorting
+    cmd: "{{.RUNNER}} ruff check --select I {{.SOURCES}}"
+
+  build:
+    desc: Check docker build
+    cmd: docker compose build --no-cache
+
   all:
     desc: Run all quality checks (lint, format, deps, typecheck, tests)
     cmds:
       - task: format
       - task: deps
       - task: typecheck
+      - task: test-cov
+
+  test-ci:
+    desc: CI pipline (no formatting)
+    cmds:
+      - task: lint
+      - task: imports
+      - task: deps
+      - task: typecheck
+      - task: security
       - task: test-cov
