@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from core.exceptions.handlers import register_exception_handlers
@@ -13,7 +14,7 @@ from core.lifespan import lifespan
 from core.logger import configure_logger
 from core.observability.monitoring import router as monitoring_router
 from core.observability.sentry import init_sentry
-from core.rate_limit import limiter, rate_limit_exceeded_handler
+from core.rate_limit import limiter, rate_limit_exceeded_handler  # , rate_limit_dep
 from core.settings import Settings, get_settings
 from infrastructure.admin.init_admin import init_admin
 from middlewares import RequestIDMiddleware, SecurityHeadersMiddleware
@@ -29,7 +30,15 @@ def configure_middlewares(app: FastAPI, settings: Settings) -> None:
             TrustedHostMiddleware,
             allowed_hosts=settings.allowed_hosts,
         )
-
+    # Session (Critical)
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=settings.secret_key,
+        session_cookie="admin_session",
+        max_age=60 * 60 * 24,  # 1 day
+        same_site="lax",
+        https_only=not settings.debug,  # secure in prod
+    )
     # Observability
     if settings.prometheus_enabled:
         app.add_middleware(MetricsMiddleware)
@@ -120,6 +129,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(
         title=settings.app_title,
         version=settings.app_version,
+        description=settings.app_description,
         root_path=settings.root_path,
         lifespan=lifespan,
         default_response_class=ORJSONResponse,

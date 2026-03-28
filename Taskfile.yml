@@ -200,7 +200,7 @@ tasks:
       - task: typecheck
       - task: test-cov
 
-  ci:
+  test-ci:
     desc: CI pipline (no formatting)
     cmds:
       - task: lint
