@@ -26,7 +26,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+        # requires HTTPS (включать только если сайт работает по HTTPS)
+        # response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+
+        # Content Security Policy (CSP) - базовая политика, разрешающая загрузку ресурсов только с того же домена
+        # response.headers["Content-Security-Policy"] = "default-src 'self'"
 
         return response

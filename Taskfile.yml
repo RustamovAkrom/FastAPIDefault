@@ -6,22 +6,23 @@ vars:
   SOURCES: src tests
   SOURCES_ROOT: src
 
+  COMPOSE_BASE: docker-compose.yml
+  COMPOSE_DB: docker-compose.db.yml
+  COMPOSE_OBS: docker-compose.obs.yml
+  COMPOSE_WORKER: docker-compose.worker.yml
+
 tasks:
   default:
     cmd: task --list
 
-  # =========================================================
-  # DATABASE
-  # =========================================================
+  ###### DATABASE ######
   db-up:
-    cmds:
-      - docker compose up -d --wait postgres
+    desc: Start database container
+    cmd: docker compose -f {{.COMPOSE_DB}} up -d --wait postgres
 
-  db-revision:
-    desc: Generate new migration
-    cmds:
-      - task: db-up
-      - "{{.RUNNER}} alembic -c src/alembic.ini revision --autogenerate -m '{{.MSG}}'"
+  db-down:
+    desc: Stop database container
+    cmd: docker compose -f {{.COMPOSE_DB}} down
 
   db-migrate:
     desc: Apply database migrations
@@ -29,12 +30,27 @@ tasks:
       - task: db-up
       - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
 
-  # =========================================================
-  # DEVELOPMENT & RUNNING
-  # =========================================================
+  db-revision:
+    desc: Generate new migration
+    cmds:
+      - task: db-up
+      - "{{.RUNNER}} alembic -c src/alembic.ini revision --autogenerate -m '{{.MSG}}'"
 
+  db-reset:
+    desc: Reset DB (local only)
+    env:
+      ENV: local
+    cmds:
+      - docker compose -f {{.COMPOSE_DB}} down -v postgres || true
+      - task: db-up
+      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+
+  db-shell:
+    cmd: docker compose -f {{.COMPOSE_DB}} exec postgres sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB'
+
+  ###### DEVELOPMENT & RUNNING ######
   init:
-    desc: Initialize project
+    desc: Init project
     env:
       ENV: local
     cmds:
@@ -43,7 +59,7 @@ tasks:
       - task: db-migrate
 
   dev:
-    desc: Run backend locally (dev mode)
+    desc: Run backend locally
     env:
       ENV: local
     cmds:
@@ -51,34 +67,76 @@ tasks:
       - task: db-migrate
       - "{{.RUNNER}} uvicorn src.dev:app --reload --reload-dir src"
 
+  ###### DOCKER STACKS ######
+  up:
+    desc: Run core infrastructure (web + db)
+    cmd: docker compose -f {{.COMPOSE_BASE}} -f {{.COMPOSE_DB}} up -d
+
   prod:
-    desc: Run production stack
+    desc: Run production (core)
     cmds:
-      - docker compose up -d --build
+      - docker compose -f {{.COMPOSE_BASE}} -f {{.COMPOSE_DB}} up --build
       - docker compose ps
 
-  stack:
-    desc: Run full stack (safe)
-    cmds:
-      - task: prod
-      - task: obs || true
-      - task: db-migrate
+  obs:
+    desc: Start monitoring stack (optional)
+    cmd: docker compose \
+      -f {{.COMPOSE_BASE}} \
+      -f {{.COMPOSE_DB}} \
+      -f {{.COMPOSE_OBS}} \
+      up -d
 
-  # =========================================================
-  # DOCKER & INFRASTRUCTURE
-  # =========================================================
+  workers:
+    desc: Run workers
+    cmd: docker compose \
+      -f {{.COMPOSE_BASE}} \
+      -f {{.COMPOSE_DB}} \
+      -f {{.COMPOSE_WORKER}} \
+      up -d
+
+  full:
+    desc: run full stack (core + monitoring + workers)
+    cmd: docker compose \
+      -f {{.COMPOSE_BASE}} \
+      -f {{.COMPOSE_DB}} \
+      -f {{.COMPOSE_OBS}} \
+      -f {{.COMPOSE_WORKER}} \
+      up -d
+
+  stack:
+    desc: Full stack + migrate
+    cmds:
+      - task: full
+      - task: db-migrate
 
   down:
     desc: Stop all containers
     cmd: docker compose down
 
   restart:
-    desc: Restart infrastructure
+    desc: Restart all
     cmds:
-      - docker compose up -d --build --force-recreate
+      - task: down
+      - task: full
 
+  ###### WORKERS REDIS & RABBITMQ ######
+  workers-redis:
+    cmd: docker compose \
+      -f docker-compose.yml \
+      -f docker-compose.db.yml \
+      -f docker-compose.worker.yml \
+      --profile redis up -d
+
+  workers-rabbitmq:
+    cmd: docker compose \
+      -f docker-compose.yml \
+      -f docker-compose.db.yml \
+      -f docker-compose.worker.yml \
+      --profile rabbitmq up -d
+
+  ###### LOGS & DEBUGGING ######
   logs:
-    desc: Show logs (all services)
+    desc: All logs (tail 100)
     cmd: docker compose logs -f --tail=100
 
   logs-web:
@@ -87,51 +145,38 @@ tasks:
 
   logs-db:
     desc: Show logs (postgres only)
-    cmd: docker compose logs -f postgres
+    cmd: docker compose -f {{.COMPOSE_DB}} logs -f postgres
 
   doctor:
-    desc: Check infrastructure status
+    desc: Check services
     cmds:
       - docker compose ps
       - docker compose top
-      - docker compose logs --tail=50 web
-      - docker compose logs --tail=50 postgres
 
-  db-reset:
-    desc: Reset database (ONLY LOCAL!)
+  ###### TESTING #######
+  test-setup:
+    cmds:
+      - docker compose -f {{.COMPOSE_DB}} down -v postgres-test || true
+      - docker compose -f {{.COMPOSE_DB}} up -d --wait postgres-test
+
+  test:
+    desc: Run unit tests
     env:
-      ENV: local
+      ENV: test
     cmds:
-      - docker compose down -v
-      - task: db-up
-      - "{{.RUNNER}} alembic -c src/alembic.ini upgrade head"
+      - task: test-setup
+      - ENV=test {{.RUNNER}} pytest -vv
 
-  db-shell:
-    cmd: docker compose exec postgres sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB'
-
-  admin-create:
-    desc: Create superadmin user
+  test-cov:
+    desc: Coverage report for tests (fail if under 75%)
+    env:
+      ENV: test
     cmds:
-      - task: db-up
-      - task: db-migrate
-      - "{{.RUNNER}} python -m scripts.create_admin"
+      - task: test-setup
+      - "{{.RUNNER}} coverage run -m pytest -vv"
+      - "{{.RUNNER}} coverage report -m --fail-under=75"
 
-  # =========================================================
-  # MONITORING & OBSERVABILITY
-  # =========================================================
-
-  obs:
-    desc: Start monitoring stack (optional)
-    cmd: docker compose up -d prometheus grafana loki promtail node-exporter postgres-exporter || true
-
-  obs-down:
-    desc: Stop monitoring stack
-    cmd: docker compose stop prometheus grafana loki promtail node-exporter postgres-exporter || true
-
-  # =========================================================
-  # CODE QUALITY & TESTING
-  # =========================================================
-
+  ###### QUALITY CHECKS ######
   lint:
     desc: Run linter (ruff check)
     cmd: "{{.RUNNER}} ruff check {{.SOURCES}}"
@@ -151,35 +196,6 @@ tasks:
     desc: Type checking (mypy)
     cmd: "{{.RUNNER}} mypy src tests"
 
-  test-setup:
-    cmds:
-      - docker compose down -v postgres-test || true
-      - docker compose up -d --wait postgres-test
-
-  test:
-    desc: Run unit tests
-    env:
-      ENV: test
-    cmds:
-      - task: test-setup
-      - ENV=test {{.RUNNER}} pytest -vv
-
-  test-cov:
-    desc: Run tests with coverage report
-    env:
-      ENV: test
-    cmds:
-      - task: test-setup
-      - "{{.RUNNER}} coverage run -m pytest -vv"
-      - "{{.RUNNER}} coverage report -m --fail-under=75"
-
-  # =========================================================
-  # CI / COMPLETE CHECKS
-  # =========================================================
-  pre-commit:
-    desc: Run pre-commit
-    cmd: uvx pre-commit run
-
   security:
     desc: Security scan (bandit)
     cmd: "{{.RUNNER}} bandit -r src -q"
@@ -188,12 +204,18 @@ tasks:
     desc: Check import sorting
     cmd: "{{.RUNNER}} ruff check --select I {{.SOURCES}}"
 
+  ###### PRE-COMMIT ######
+  pre-commit:
+    desc: Run pre-commit
+    cmd: uvx pre-commit run
+
+  ###### DOCKER BUILD ######
   build:
     desc: Check docker build
-    cmd: docker compose build --no-cache
+    cmd: docker compose -f {{.COMPOSE_BASE}} -f {{.COMPOSE_DB}} build --no-cache
 
+  ###### CI TASKS ######
   all:
-    desc: Run all quality checks (lint, format, deps, typecheck, tests)
     cmds:
       - task: format
       - task: deps

@@ -16,21 +16,49 @@ from core.observability.monitoring import router as monitoring_router
 from core.observability.sentry import init_sentry
 from core.rate_limit import limiter, rate_limit_exceeded_handler  # , rate_limit_dep
 from core.settings import Settings, get_settings
+from core.swagger import configure_swagger
 from infrastructure.admin.init_admin import init_admin
 from middlewares import RequestIDMiddleware, SecurityHeadersMiddleware
+from middlewares.logging import LoggingMiddleware
 from middlewares.metrics import MetricsMiddleware
 from modules import load_modules
 
 
 ### CONFIGURATORS ###
 def configure_middlewares(app: FastAPI, settings: Settings) -> None:
-    # Security
+    # Trusted hosts (security)
     if settings.allowed_hosts:
         app.add_middleware(
             TrustedHostMiddleware,
-            allowed_hosts=settings.allowed_hosts,
+            allowed_hosts=settings.allowed_hosts or ["*"],
         )
-    # Session (Critical)
+
+    # CORS (browser security)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    )
+
+    # Request ID (context)
+    app.add_middleware(RequestIDMiddleware)
+
+    # Logging (Observability)
+    app.add_middleware(LoggingMiddleware)
+
+    # Metrics (Observability)
+    if settings.prometheus_enabled:
+        app.add_middleware(MetricsMiddleware)
+
+    # Rate Limit (protection)
+    if settings.rate_limit_enabled:
+        app.state.limiter = limiter
+        app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+        app.add_middleware(SlowAPIMiddleware)
+
+    # Session (auth)
     app.add_middleware(
         SessionMiddleware,
         secret_key=settings.secret_key,
@@ -39,33 +67,14 @@ def configure_middlewares(app: FastAPI, settings: Settings) -> None:
         same_site="lax",
         https_only=not settings.debug,  # secure in prod
     )
-    # Observability
-    if settings.prometheus_enabled:
-        app.add_middleware(MetricsMiddleware)
 
-    # Rate limiter
-    if settings.rate_limit_enabled:
-        app.state.limiter = limiter
-        app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
-        app.add_middleware(SlowAPIMiddleware)
-
-    # Request tracking
-    app.add_middleware(RequestIDMiddleware)
+    # Security Headers (response hardening)
     app.add_middleware(SecurityHeadersMiddleware)
 
-    # CORS
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    # Compression
+    # GZip (performance)
     app.add_middleware(
         GZipMiddleware,
-        minimum_size=1000,  # сжимать ответы больше 1kb
+        minimum_size=1000,  # gzip responses larger than 1KB
     )
 
 
@@ -133,12 +142,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         root_path=settings.root_path,
         lifespan=lifespan,
         default_response_class=ORJSONResponse,
-        swagger_ui_parameters={"defaultModelsExpandDepth": -1},
-        docs_url="/docs" if settings.debug else None,
+        docs_url=None,
         redoc_url=None,
         openapi_url="/openapi.json" if settings.debug else None,
     )
 
+    configure_swagger(app)
     configure_middlewares(app, settings)
     configure_routes(app, settings)
     configure_admin_panel(app, settings)
