@@ -20,7 +20,7 @@ stages:
 .uv_job: &uv_job
   image: $IMAGE_UV
   interruptible: true
-  allow_failure: true
+  allow_failure: false
   cache:
     - key:
         files:

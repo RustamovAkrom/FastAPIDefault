@@ -164,7 +164,7 @@ tasks:
     cmds:
       - task: test-setup
       - "{{.RUNNER}} coverage run -m pytest -vv"
-      - "{{.RUNNER}} coverage report -m --fail-under=75"
+      - "{{.RUNNER}} coverage report -m --fail-under=80"
 
   # =========================================================
   # CI / COMPLETE CHECKS
