@@ -1,7 +1,5 @@
-![banner](/assets/banner.png)
-
 # FastAPI Default - Production-Ready FastAPI Template
-Репозиторий:  
+Репозиторий:
 https://github.com/RustamovAkrom/FastAPIDefault
 
 **FastAPI Default** — production-ready шаблон backend-сервиса на **FastAPI**, включающий:
@@ -136,11 +134,7 @@ FastAPI-Default/
 │  ├─ test_dummy.py
 │  └─ __init__.py
 ├─ .dockerignore
-├─ .env
-├─ .env.ci
 ├─ .env.example
-├─ .env.local
-├─ .env.test
 ├─ .gitignore
 ├─ .gitlab-ci.yml
 ├─ .pre-commit-config.yaml
@@ -158,14 +152,20 @@ FastAPI-Default/
 
 Проект использует **Pydantic Settings**.
 
-Файл `.env` выбирается автоматически по переменной `ENV`.
+Файлы конфигурации выбираются автоматически по переменной `ENV`.
 
 | ENV | используемый файл |
 |----|----|
-| local | `.env.local` |
-| test | `.env.test` |
-| ci | `.env.ci` |
+| local | `.env` + `.env.local` |
+| test | `.env` + `.env.test` |
+| ci | `.env` + `.env.ci` |
 | prod | `.env` |
+
+Рекомендуемая практика:
+
+- хранить в Git только `.env.example`
+- реальные `.env*` файлы держать локально/на сервере и не коммитить
+- для production использовать переменные окружения (или secret manager) как приоритетный источник
 
 ---
 

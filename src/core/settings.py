@@ -12,7 +12,7 @@ ENV_FILES = {
     "local": (".env", ".env.local"),
     "ci": (".env", ".env.ci"),
     "test": (".env", ".env.test"),
-    "prod": (".env", ".env.prod"),
+    "prod": (".env",),
 }.get(ENV, (".env",))
 
 
