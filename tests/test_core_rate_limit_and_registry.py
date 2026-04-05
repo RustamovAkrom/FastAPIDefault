@@ -155,6 +155,7 @@ def test_load_modules_branches(monkeypatch) -> None:
         if name == "good":
             return types.SimpleNamespace(Module=Good)
         if name == "duplicate":
+
             class Duplicate(Good):
                 @property
                 def spec(self) -> ModuleSpec:

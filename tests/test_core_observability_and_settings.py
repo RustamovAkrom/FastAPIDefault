@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncHTTPTransport
@@ -114,8 +116,9 @@ def test_configure_swagger_debug_toggle(monkeypatch) -> None:
 
 @pytest.mark.anyio
 async def test_swagger_routes_execute_and_settings_properties(monkeypatch) -> None:
-    from core import swagger
     from httpx import ASGITransport, AsyncClient
+
+    from core import swagger
 
     monkeypatch.setattr(swagger, "get_settings", lambda: Settings(env="test", debug=True))
     app = app_module.create_app(Settings(env="test", debug=True))
@@ -127,7 +130,8 @@ async def test_swagger_routes_execute_and_settings_properties(monkeypatch) -> No
         oauth = await client.get("/docs/oauth2-redirect")
         assert oauth.status_code == 200
 
-    s_prod = Settings(env="prod", postgres_db="db", postgres_password="p")
+    test_db_password = uuid4().hex
+    s_prod = Settings(env="prod", postgres_db="db", postgres_password=test_db_password)
     assert s_prod.is_prod is True
     assert s_prod.is_local is False
     assert "+asyncpg" not in s_prod.postgres_sync_url

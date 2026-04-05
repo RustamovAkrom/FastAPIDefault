@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 
 from modules.dummy.repository import DummyRepository
@@ -23,7 +25,8 @@ class _FakeRequest:
 async def test_admin_auth_methods() -> None:
     auth = SimpleAdminAuth()
     auth.settings.admin_username = "u"
-    auth.settings.admin_password = "p"
+    test_admin_password = uuid4().hex
+    auth.settings.admin_password = test_admin_password
 
     fail = _FakeRequest(form_data={"username": "u", "password": "bad"}, session={})
     assert await auth.login(fail) is False
@@ -31,7 +34,7 @@ async def test_admin_auth_methods() -> None:
     missing = _FakeRequest(form_data={}, session={})
     assert await auth.login(missing) is False
 
-    ok = _FakeRequest(form_data={"username": "u", "password": "p"}, session={"x": 1})
+    ok = _FakeRequest(form_data={"username": "u", "password": test_admin_password}, session={"x": 1})
     assert await auth.login(ok) is True
     assert ok.session.get("admin") is True
 

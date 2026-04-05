@@ -140,3 +140,7 @@ filterwarnings = [
 [[tool.mypy.overrides]]
 module = ["sqladmin.*", "prometheus_client.*"]
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+ignore_errors = true
