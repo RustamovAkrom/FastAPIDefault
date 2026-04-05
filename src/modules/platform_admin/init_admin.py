@@ -3,8 +3,8 @@ from sqladmin import Admin
 
 from core.database import get_db_engine
 from core.settings import get_settings
-from infrastructure.admin.auth import SimpleAdminAuth
-from infrastructure.admin.registry import get_admin_views
+from modules.platform_admin.auth import SimpleAdminAuth
+from modules.platform_admin.registry import get_admin_views
 
 
 def init_admin(app: FastAPI) -> FastAPI:

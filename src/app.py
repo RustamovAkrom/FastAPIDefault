@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import HTMLResponse, ORJSONResponse
+from fastapi.responses import ORJSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -12,16 +11,16 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from core.exceptions.handlers import register_exception_handlers
 from core.lifespan import lifespan
 from core.logger import configure_logger
+from core.module_engine.registry import load_modules
 from core.observability.monitoring import router as monitoring_router
 from core.observability.sentry import init_sentry
 from core.rate_limit import limiter, rate_limit_exceeded_handler  # , rate_limit_dep
 from core.settings import Settings, get_settings
 from core.swagger import configure_swagger
-from infrastructure.admin.init_admin import init_admin
 from middlewares import RequestIDMiddleware, SecurityHeadersMiddleware
 from middlewares.logging import LoggingMiddleware
 from middlewares.metrics import MetricsMiddleware
-from modules import load_modules
+from modules.platform_admin.init_admin import init_admin
 
 
 ### CONFIGURATORS ###
@@ -82,11 +81,12 @@ def configure_middlewares(app: FastAPI, settings: Settings) -> None:
 def configure_routes(app: FastAPI, settings: Settings) -> None:
     api_router = load_modules()
 
+    # load all module routes
     app.include_router(
         router=api_router,
-        prefix=settings.api_v1_str,
         # dependencies=[Depends(rate_limit_dep)] # rate limit dependencies
     )
+    # monitoring routes (not rate limited)
     app.include_router(router=monitoring_router, tags=["Monitoring"])
 
 
@@ -105,21 +105,6 @@ def configure_static_files(app: FastAPI, settings: Settings) -> None:
     media_dir = settings.BASE_DIR / settings.media_root
     if media_dir.exists():
         app.mount(settings.media_url, StaticFiles(directory=str(media_dir)), name=settings.media_root)
-
-
-### TEMPLATES ###
-def configure_templates(app: FastAPI, settings: Settings) -> None:
-    templates = Jinja2Templates(directory=settings.BASE_DIR / "templates")
-
-    # Default home page
-    @app.get("/", response_class=HTMLResponse, include_in_schema=False)
-    async def home(request: Request) -> HTMLResponse:
-        base_url = f"{request.url.scheme}://{request.headers.get('host')}"
-        hostname = request.url.hostname
-
-        return templates.TemplateResponse(
-            "index.html", {"request": request, "base_url": base_url, "hostname": hostname}
-        )
 
 
 ### OBSERVABILITY ###
@@ -152,7 +137,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     configure_routes(app, settings)
     configure_admin_panel(app, settings)
     configure_static_files(app, settings)
-    configure_templates(app, settings)
 
     register_exception_handlers(app)
 

@@ -7,7 +7,7 @@ from sqlalchemy.future import Connection
 
 from core.settings import get_settings
 from db.meta import meta
-from modules import load_modules
+from core.module_engine.registry import load_modules
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

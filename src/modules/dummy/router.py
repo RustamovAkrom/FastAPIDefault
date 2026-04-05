@@ -8,7 +8,7 @@ from pydantic import TypeAdapter
 from modules.dummy.repository import DummyRepository
 from modules.dummy.schemas import Dummy, DummyCreate
 
-router = APIRouter(prefix="/dummy", tags=["dummy"])
+router = APIRouter(prefix="/api/v1/dummy", tags=["dummy"])
 
 
 @router.get("/", summary="Получить список объектов")

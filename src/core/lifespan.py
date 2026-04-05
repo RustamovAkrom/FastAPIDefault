@@ -5,8 +5,8 @@ from fastapi import FastAPI
 
 from core.database import get_db_engine
 from core.logger import configure_logger
+from core.module_engine.registry import loaded_modules
 from core.requests import get_http_transport
-from modules import loaded_modules
 
 
 @asynccontextmanager

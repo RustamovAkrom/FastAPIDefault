@@ -1,4 +1,4 @@
-from modules.base import BaseModule
+from core.module_engine.base import BaseModule
 
 from .admin import DummyAdmin
 

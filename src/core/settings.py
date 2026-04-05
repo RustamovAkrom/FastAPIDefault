@@ -53,7 +53,6 @@ class Settings(BaseSettings):
     app_name: str = "fastapidefault"
     app_version: str = "1.0.0"
     app_description: str = "A FastAPI boilerplate with Docker, PostgreSQL, Celery, Redis, and more."
-    api_v1_str: str = "/api/v1"
     app_host: str = "127.0.0.1"
     app_port: int = 8000
     env: Literal["local", "test", "ci", "prod"] = "local"
@@ -86,7 +85,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
 
     # Admin panel settings
-    admin_enabled: bool = debug
+    admin_enabled: bool = True
     admin_username: str | None = None
     admin_password: str | None = None
     admin_path: str = "/admin"
@@ -169,8 +168,8 @@ class Settings(BaseSettings):
         "webp",
     ]
 
-    # Email (SMPT)
-    smpt_host: str = "smtp.gmail.com"
+    # Email (SMTP)
+    smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
