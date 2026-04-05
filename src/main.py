@@ -17,7 +17,7 @@ def main() -> None:
         app_dir="src",
         host=settings.app_host,
         port=settings.app_port,
-        reload=True,
+        reload=settings.debug,
     )
 
 

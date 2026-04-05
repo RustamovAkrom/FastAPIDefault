@@ -1,8 +1,8 @@
 from typing import ClassVar
 
-from infrastructure.admin.base import BaseAdmin
-from infrastructure.admin.registry import register_admin
 from modules.dummy.models import Dummy
+from modules.platform_admin.base import BaseAdmin
+from modules.platform_admin.registry import register_admin
 
 
 @register_admin

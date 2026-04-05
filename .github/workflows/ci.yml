@@ -148,7 +148,7 @@ jobs:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
           POSTGRES_DB: test
-          ENV: ci
+          ENV: test
           SECRET_KEY: test-secret-key
         run: |
           export PATH="$HOME/.local/bin:$PATH"

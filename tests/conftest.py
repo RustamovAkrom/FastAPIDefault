@@ -12,10 +12,10 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app import create_app
+from core.module_engine.registry import load_modules
 from core.settings import get_settings
 from db.base import Base
 from db.dependencies import get_db_session
-from modules import load_modules
 
 
 @pytest.fixture(scope="session")

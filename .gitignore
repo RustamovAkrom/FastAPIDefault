@@ -1,5 +1,5 @@
 ### Python template
-
+old_compose/
 .idea/
 .vscode/
 # Byte-compiled / optimized / DLL files
@@ -110,6 +110,10 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.example
+!.env.ci
+!.env.test
 .venv
 env/
 venv/

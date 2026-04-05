@@ -66,7 +66,6 @@ dependencies = [
     "kombu>=5.6.2",
     "aiohttp>=3.13.3",
     "slowapi>=0.1.9",
-    "bandit>=1.9.4",
     "wtforms>=3.1.2",
     "requests>=2.33.0",
 ]
@@ -80,7 +79,7 @@ Issues = "https://github.com/RustamovAkrom/FastAPIDefault/issues"
 [dependency-groups]
 dev = ["fastapi[standard]", "deptry"]
 test = ["pytest", "pytest-cov", "pytest-mock", "anyio"]
-lint = ["ruff"]
+lint = ["ruff", "bandit"]
 typecheck = ["mypy", "asyncpg-stubs"]
 docker = ["uvloop==0.21.0", "httptools==0.6.4"]
 
@@ -140,4 +139,8 @@ filterwarnings = [
 
 [[tool.mypy.overrides]]
 module = ["sqladmin.*", "prometheus_client.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
 ignore_errors = true

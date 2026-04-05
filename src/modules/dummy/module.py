@@ -1,4 +1,4 @@
-from modules.base import BaseModule
+from core.module_engine.base import BaseModule
 
 from .admin import DummyAdmin
 
@@ -12,6 +12,6 @@ class Module(BaseModule):
 
     router = router
 
-    models = [Dummy]
+    models = (Dummy,)
 
-    admin_views = [DummyAdmin]
+    admin_views = (DummyAdmin,)

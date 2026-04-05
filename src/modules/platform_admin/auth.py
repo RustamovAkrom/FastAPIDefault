@@ -7,11 +7,8 @@ from core.settings import get_settings
 
 class SimpleAdminAuth(AuthenticationBackend):
     def __init__(self) -> None:
-        settings = get_settings()
-        super().__init__(secret_key=settings.secret_key)
-
-        self.username = settings.admin_username
-        self.password = settings.admin_password
+        self.settings = get_settings()
+        super().__init__(secret_key=self.settings.secret_key)
 
     async def login(self, request: Request) -> bool:
         form = await request.form()
@@ -19,10 +16,10 @@ class SimpleAdminAuth(AuthenticationBackend):
         username = form.get("username")
         password = form.get("password")
 
-        if not isinstance(username, str) or not isinstance(password, str):
+        if not username or not password:
             return False
 
-        if username == self.username and password == self.password:
+        if username == self.settings.admin_username and password == self.settings.admin_password:
             request.session.clear()
             request.session["admin"] = True
             return True

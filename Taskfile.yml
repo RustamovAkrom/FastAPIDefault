@@ -109,13 +109,6 @@ tasks:
   db-shell:
     cmd: docker compose exec postgres sh -c 'psql -U $POSTGRES_USER $POSTGRES_DB'
 
-  admin-create:
-    desc: Create superadmin user
-    cmds:
-      - task: db-up
-      - task: db-migrate
-      - "{{.RUNNER}} python -m scripts.create_admin"
-
   # =========================================================
   # MONITORING & OBSERVABILITY
   # =========================================================
@@ -171,7 +164,7 @@ tasks:
     cmds:
       - task: test-setup
       - "{{.RUNNER}} coverage run -m pytest -vv"
-      - "{{.RUNNER}} coverage report -m --fail-under=75"
+      - "{{.RUNNER}} coverage report -m --fail-under=80"
 
   # =========================================================
   # CI / COMPLETE CHECKS
