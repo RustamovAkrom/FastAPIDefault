@@ -4,7 +4,6 @@ from collections.abc import Callable
 from fastapi import Request
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 from starlette.responses import Response
 
 from core.settings import get_settings
@@ -13,18 +12,16 @@ settings = get_settings()
 
 
 def get_rate_limit_key(request: Request) -> str:
-    """
-    Identify client.
-    Priority:
-    - X-Forwarded-For (proxy)
-    - IP
-    - user_id (if auth added later)
-    """
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    settings = get_settings()
+    client_ip = request.client.host if request.client else "unknown"
 
-    return get_remote_address(request)
+    # доверяем XFF только от trusted proxy
+    if client_ip in settings.trusted_proxies:
+        xff = request.headers.get("X-Forwarded-For")
+        if xff:
+            return xff.split(",")[0].strip()
+
+    return client_ip
 
 
 limiter = Limiter(

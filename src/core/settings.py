@@ -6,13 +6,14 @@ from typing import Literal
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 from yarl import URL
 
-ENV_FILE_PATH = (
-    {
-        "local": ".env.local",
-        "test": ".env.test",
-        "prod": ".env",
-    }
-).get(os.getenv("ENV", "local"), ".env")
+ENV = os.getenv("ENV", "local")
+
+ENV_FILES = {
+    "local": (".env", ".env.local"),
+    "ci": (".env", ".env.ci"),
+    "test": (".env", ".env.test"),
+    "prod": (".env", ".env.prod"),
+}.get(ENV, (".env",))
 
 
 class Settings(BaseSettings):
@@ -26,9 +27,9 @@ class Settings(BaseSettings):
     BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
     model_config = SettingsConfigDict(
-        env_file=ENV_FILE_PATH,
+        env_file=ENV_FILES,
         env_file_encoding="utf-8",
-        extra="allow",
+        extra="ignore",
     )
 
     @classmethod
@@ -40,11 +41,10 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        return super().settings_customise_sources(
-            settings_cls,
+        return (
             init_settings,
-            dotenv_settings,
-            env_settings,
+            dotenv_settings,  # Сначала грузим файлы
+            env_settings,  # ПЕРЕМЕННЫЕ ОС ПЕРЕКРЫВАЮТ ФАЙЛЫ (Самый высокий приоритет)
             file_secret_settings,
         )
 
@@ -120,6 +120,7 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = False
     rate_limit_default: str = "100/minute"
     rate_limit_storage_url: str = "memory://"
+    trusted_proxies: list[str] = []
 
     # Security
     allowed_hosts: list[str] = ["*"]

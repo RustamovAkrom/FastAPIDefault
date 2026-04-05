@@ -16,17 +16,14 @@ class SimpleAdminAuth(AuthenticationBackend):
         username = form.get("username")
         password = form.get("password")
 
-        # print(username, password)
-        print(self.settings.admin_username, self.settings.admin_password)
         if not username or not password:
             return False
 
         if username == self.settings.admin_username and password == self.settings.admin_password:
-            print("Login successful")
             request.session.clear()
             request.session["admin"] = True
             return True
-        print("Login failed")
+
         return False
 
     async def logout(self, request: Request) -> bool | Response:
