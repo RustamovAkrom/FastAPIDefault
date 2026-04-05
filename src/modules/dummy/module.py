@@ -12,6 +12,6 @@ class Module(BaseModule):
 
     router = router
 
-    models = [Dummy]
+    models = (Dummy,)
 
-    admin_views = [DummyAdmin]
+    admin_views = (DummyAdmin,)

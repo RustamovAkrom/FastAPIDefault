@@ -8,10 +8,10 @@ class Module(BaseModule):
 
     router = router
 
-    models = []
+    models = ()
 
-    admin_views = []
+    admin_views = ()
 
-    middlewares = []
-    dependencies = []
-    tasks = []
+    middlewares = ()
+    dependencies = ()
+    tasks = ()
