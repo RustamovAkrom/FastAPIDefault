@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from typing import Any, cast
+
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import ORJSONResponse
@@ -11,7 +13,8 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from core.exceptions.handlers import register_exception_handlers
 from core.lifespan import lifespan
 from core.logger import configure_logger
-from core.module_engine.registry import load_modules
+from core.module_engine.base import BaseModule
+from core.module_engine.registry import get_loaded_modules, load_modules
 from core.observability.monitoring import router as monitoring_router
 from core.observability.sentry import init_sentry
 from core.rate_limit import limiter, rate_limit_exceeded_handler  # , rate_limit_dep
@@ -24,7 +27,7 @@ from modules.platform_admin.init_admin import init_admin
 
 
 ### CONFIGURATORS ###
-def configure_middlewares(app: FastAPI, settings: Settings) -> None:
+def configure_middlewares(app: FastAPI, settings: Settings, modules: tuple[BaseModule, ...]) -> None:
     # Trusted hosts (security)
     if settings.allowed_hosts:
         app.add_middleware(
@@ -76,11 +79,14 @@ def configure_middlewares(app: FastAPI, settings: Settings) -> None:
         minimum_size=1000,  # gzip responses larger than 1KB
     )
 
+    # Module middlewares (loaded from module engine)
+    for module in modules:
+        for middleware_cls, options in module.middlewares:
+            app.add_middleware(cast(Any, middleware_cls), **options)
+
 
 ### ROUTES ###
-def configure_routes(app: FastAPI, settings: Settings) -> None:
-    api_router = load_modules()
-
+def configure_routes(app: FastAPI, api_router: APIRouter) -> None:
     # load all module routes
     app.include_router(
         router=api_router,
@@ -120,6 +126,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     configure_logger()
     configure_observability(settings)
 
+    api_router = load_modules()
+    modules = get_loaded_modules()
+
     app = FastAPI(
         title=settings.app_title,
         version=settings.app_version,
@@ -133,8 +142,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     configure_swagger(app)
-    configure_middlewares(app, settings)
-    configure_routes(app, settings)
+    configure_middlewares(app, settings, modules)
+    configure_routes(app, api_router)
     configure_admin_panel(app, settings)
     configure_static_files(app, settings)
 
